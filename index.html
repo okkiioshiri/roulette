@@ -382,7 +382,7 @@
 
 <div class="container">
     <div id="itemList">
-        <h2>項目リスト</h2>
+        <h2>抽選リスト</h2>
         <ul id="list"></ul>
     </div>
 
@@ -421,14 +421,14 @@
 
             <div class="action-group">
                 <button class="tooltip-btn action" data-tooltip="抽選結果を除外しない" onclick="startRoulette(false)">START</button>
-                <button class="tooltip-btn action" data-tooltip="抽選結果を除外する" onclick="startRoulette(true)">REMOVE & START</button>
+                <button class="tooltip-btn action" data-tooltip="抽選結果を除外する" onclick="startRoulette(true)">START & REMOVE</button>
             </div>
         </div>
     </div>
 
     <div id="history">
-        <h2>抽選履歴</h2>
-        <button onclick="clearHistory()">履歴クリア</button>
+        <h2>抽選結果</h2>
+        <button onclick="clearHistory()">クリア</button>
         <ul id="historyList"></ul>
     </div>
 </div>
@@ -564,7 +564,6 @@ function restoreFromCSV(csvText) {
                     const winnerItem = items.find(i => i.text === text);
                     if (winnerItem) {
                         lastWinnerId = winnerItem.id;
-                        // ここを修正: (復元)という文字列を削除し、通常形式に合わせる
                         const itemNumber = items.indexOf(winnerItem) + 1;
                         document.getElementById('selectedItem').textContent = `${winnerItem.text}（番号: ${itemNumber}）`;
                         updateUI();
@@ -644,7 +643,7 @@ function renderList() {
 
         const trashBtn = document.createElement('button');
         trashBtn.className = 'icon-btn tooltip-btn list trash-btn';
-        trashBtn.setAttribute('data-tooltip', '完全削除');
+        trashBtn.setAttribute('data-tooltip', '削除');
         trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
         trashBtn.onclick = () => { items.splice(index, 1); updateUI(); };
 
@@ -655,7 +654,7 @@ function renderList() {
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'icon-btn tooltip-btn list';
         toggleBtn.textContent = item.active ? '✕' : '♻';
-        toggleBtn.setAttribute('data-tooltip', item.active ? '抽選対象から外す' : '抽選対象に戻す');
+        toggleBtn.setAttribute('data-tooltip', item.active ? '外す' : '戻す');
         toggleBtn.onclick = () => { item.active = !item.active; updateUI(); };
 
         li.append(trashBtn, span, toggleBtn);
