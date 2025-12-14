@@ -16,7 +16,6 @@
         --accent-color: #007aff;
         --danger-color: #ff3b30;
         --shadow-color: rgba(0, 0, 0, 0.15);
-        /* ツールチップ背景（60%不透明度） */
         --tooltip-bg: rgba(51, 51, 51, 0.6);
     }
     body.dark {
@@ -32,7 +31,7 @@
     }
 
     /* =========================================
-       基本レイアウト (Global Layout)
+       基本レイアウト
        ========================================= */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -108,273 +107,173 @@
         position: relative;
         cursor: grab;
     }
-    #itemList li:active {
-        cursor: grabbing;
-    }
-    #itemList li.dragging {
-        opacity: 0.5;
-        background: var(--highlight-color);
-    }
-    #itemList li.over {
-        border-top: 2px solid var(--accent-color);
-    }
+    #itemList li:active { cursor: grabbing; }
+    #itemList li.dragging { opacity: 0.5; background: var(--highlight-color); }
+    #itemList li.over { border-top: 2px solid var(--accent-color); }
     .item-text {
-        flex: 1;
-        text-align: left;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        pointer-events: none;
+        flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
     }
-    .highlight {
-        background-color: var(--highlight-color);
-    }
-    .final-highlight {
-        background-color: var(--highlight-color);
-        font-weight: bold;
-    }
-    .inactive .item-text {
-        color: #aaa;
-        opacity: 0.6;
-    }
+    .highlight { background-color: var(--highlight-color); }
+    .final-highlight { background-color: var(--highlight-color); font-weight: bold; }
+    .inactive .item-text { color: #aaa; opacity: 0.6; }
 
     /* =========================================
-       ルーレット本体 (Roulette)
+       ルーレット本体
        ========================================= */
     #titleInput {
-        font-size: 28px;
-        font-weight: 500;
-        text-align: center;
-        border: none;
-        background: transparent;
-        color: var(--text-color);
-        outline: none;
-        width: calc(100% - 20px);
-        margin: 0 auto 10px auto;
-        display: block;
+        font-size: 28px; font-weight: 500; text-align: center; border: none; background: transparent;
+        color: var(--text-color); outline: none; width: calc(100% - 20px); margin: 0 auto 10px auto; display: block;
     }
     #selectedItem {
-        font-size: 24px;
-        font-weight: bold;
-        margin: 20px 0;
-        min-height: 30px;
+        font-size: 24px; font-weight: bold; margin: 20px 0; min-height: 30px;
     }
     .roulette-wrapper {
-        position: relative;
-        width: 400px;
-        height: 400px;
-        margin: 0 auto;
-        border-radius: 50%;
-        box-shadow: 0 10px 25px var(--shadow-color);
+        position: relative; width: 400px; height: 400px; margin: 0 auto;
+        border-radius: 50%; box-shadow: 0 10px 25px var(--shadow-color);
     }
     .roulette-wrapper::after {
-        content: '';
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        width: 40px; height: 40px;
-        background: var(--card-bg);
-        border: 4px solid var(--text-color);
-        border-radius: 50%;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        z-index: 10;
-        pointer-events: none;
+        content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 40px; height: 40px; background: var(--card-bg); border: 4px solid var(--text-color);
+        border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; pointer-events: none;
     }
     #roulette {
-        width: 400px; height: 400px;
-        transform: rotate(0deg);
-        filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
+        width: 400px; height: 400px; transform: rotate(0deg); filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
     }
     .pointer {
-        position: absolute;
-        top: 50%; left: 100%;
-        transform: translate(-55%, -50%) rotate(270deg);
-        width: 0; height: 0;
-        border-left: 18px solid transparent;
-        border-right: 18px solid transparent;
-        border-bottom: 24px solid var(--text-color);
-        z-index: 20;
-        filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        position: absolute; top: 50%; left: 100%; transform: translate(-55%, -50%) rotate(270deg);
+        width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent;
+        border-bottom: 24px solid var(--text-color); z-index: 20; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
     }
 
     /* =========================================
-       ボタン・コントロール (Controls)
+       ボタン・コントロール
        ========================================= */
     .controls {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        margin-top: 20px;
-        width: 100%;
+        display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; width: 100%;
     }
-    .input-group, .action-group {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        max-width: 400px;
+    .input-group, .action-group, .file-group {
+        display: flex; justify-content: center; gap: 10px; width: 100%; max-width: 480px;
     }
-    .input-group input[type="text"] {
-        flex: 1;
-        padding: 8px;
-        font-size: 16px;
-        background: var(--card-bg);
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-    }
-    
-    /* --- ファイル操作エリア --- */
+    .action-group + .action-group { margin-top: -5px; }
     .file-area {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        max-width: 400px;
-        gap: 5px;
-    }
-    .file-group {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
+        display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; gap: 5px;
     }
 
+    /* 高さ統一 */
+    .input-group input[type="text"], 
+    .file-input-wrapper, 
+    button, 
+    .custom-file-btn {
+        height: 40px; 
+        box-sizing: border-box;
+    }
+
+    .input-group input[type="text"] {
+        flex: 1; padding: 0 10px; font-size: 16px;
+        background: var(--card-bg); color: var(--text-color);
+        border: 1px solid var(--border-color); border-radius: 4px; line-height: 38px;
+    }
+
+    /* Inputの隠し方を変更：display:noneではなく、透明にして配置 */
     #fileInput {
-        display: none;
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        opacity: 0; cursor: pointer; z-index: 10;
     }
 
-    /* ボタン共通スタイル */
+    /* ボタン共通（80%透過） */
     button, .custom-file-btn {
-        padding: 10px 20px;
+        background: var(--text-color); color: var(--bg-color);
+        border: none; border-radius: 6px; cursor: pointer;
+        transition: background 0.3s, transform 0.2s, opacity 0.3s;
+        position: relative; display: inline-flex; align-items: center; justify-content: center;
         font-size: 16px;
-        background: var(--text-color);
-        color: var(--bg-color);
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        line-height: 1.2;
+        opacity: 0.8; /* 透過設定 */
     }
     button:hover, .custom-file-btn:hover {
-        opacity: 0.8;
+        opacity: 1;
     }
+    button.clear-btn:hover { background-color: var(--danger-color); color: white; opacity: 1; }
 
-    /* ファイルドラッグ時のスタイル */
-    .file-input-wrapper.dragover .custom-file-btn {
-        background: var(--accent-color);
-        color: white;
-        box-shadow: 0 0 10px var(--accent-color);
-        transform: scale(1.02);
+    /* 横幅合わせ：追加ボタンと保存ボタン */
+    .input-group button, 
+    .file-group button.icon-only {
+        width: 60px; /* 統一 */
+        padding: 0; flex: 0 0 60px;
     }
+    
+    .action-group button { flex: 1; white-space: nowrap; padding: 0 10px; }
 
-    .custom-file-btn {
-        flex: 1;
-    }
-
-    button.icon-only {
-        padding: 10px;
-        width: 46px; 
-        flex: 0 0 auto;
-    }
-    button.icon-only svg {
-        width: 20px;
-        height: 20px;
-        fill: currentColor;
-    }
-
+    /* ファイル入力ラッパー */
     .file-input-wrapper {
-        flex: 1;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: stretch;
+        flex: 1; position: relative; display: flex; align-items: center; justify-content: stretch;
+    }
+    .custom-file-btn {
+        width: 100%; height: 100%;
+        pointer-events: none; /* ラベル自体はクリックを透過させ、背面のInputに任せる、またはInputを前面に */
+    }
+    /* Inputが前面にあるので、ラベルのスタイルはInputの後ろに見えるように */
+    /* 修正: Inputを前面に置くため、ラベルは見た目だけ担当 */
+    
+    .file-input-wrapper.dragover .custom-file-btn {
+        background: var(--accent-color); color: white;
+        box-shadow: 0 0 10px var(--accent-color); transform: scale(1.02); opacity: 1;
     }
 
+    button.icon-only svg { width: 22px; height: 22px; fill: currentColor; }
+    
     #fileNameDisplay {
-        font-size: 13px;
-        color: var(--text-color);
-        opacity: 0.8;
-        height: 18px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 100%;
+        font-size: 13px; color: var(--text-color); opacity: 0.8;
+        height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
     }
-
+    
+    /* リスト内アイコン */
     .icon-btn {
-        background: none;
-        border: none;
-        padding: 4px;
-        font-size: 18px;
-        color: var(--text-color);
+        background: none; border: none; padding: 4px; font-size: 18px; color: var(--text-color);
+        opacity: 0.8; height: auto;
     }
     .icon-btn:hover { color: var(--accent-color); opacity: 1; }
     .icon-btn.trash-btn:hover { color: var(--danger-color); }
 
-    /* --- ツールチップ --- */
+    /* ツールチップ */
     [data-tooltip]::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        background: var(--tooltip-bg);
-        color: var(--bg-color);
-        padding: 5px 10px;
-        font-size: 13px;
-        border-radius: 6px;
-        white-space: nowrap;
-        opacity: 0;
-        pointer-events: none;
+        content: attr(data-tooltip); position: absolute;
+        background: var(--tooltip-bg); color: var(--bg-color);
+        padding: 5px 10px; font-size: 13px; border-radius: 6px;
+        white-space: nowrap; opacity: 0; pointer-events: none;
         transition: opacity 0.2s ease, transform 0.2s ease;
-        z-index: 1000;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         backdrop-filter: blur(2px);
     }
-    [data-tooltip]:hover::after {
-        opacity: 1;
-    }
+    [data-tooltip]:hover::after { opacity: 1; }
 
-    .tooltip-btn.action::after, 
-    .tooltip-btn.list::after {
-        top: 100%; 
-        left: 50%;
-        transform: translateX(-50%) translateY(0);
-        margin-top: 4px; 
+    /* 位置指定 */
+    .tooltip-btn.action::after, .tooltip-btn.list::after {
+        top: 100%; left: 50%; transform: translateX(-50%) translateY(0); margin-top: 4px;
     }
-    .tooltip-btn.action:hover::after, 
-    .tooltip-btn.list:hover::after {
-        transform: translateX(-50%) translateY(4px);
-    }
+    .tooltip-btn.action:hover::after, .tooltip-btn.list:hover::after { transform: translateX(-50%) translateY(4px); }
 
-    .tooltip-btn.right::after {
-        top: 50%; 
-        left: 100%; 
-        transform: translateY(-50%) translateX(0);
-        margin-left: 6px; 
+    .tooltip-right::after {
+        top: 50%; left: 100%; transform: translateY(-50%) translateX(0); margin-left: 6px;
     }
-    .tooltip-btn.right:hover::after {
-        transform: translateY(-50%) translateX(4px);
-    }
+    .tooltip-right:hover::after { transform: translateY(-50%) translateX(4px); }
 
-    .tooltip-btn.left::after {
-        top: 50%;
-        right: 100%;
-        transform: translateY(-50%) translateX(0);
-        margin-right: 6px; 
+    .tooltip-left::after {
+        top: 50%; right: 100%; left: auto; transform: translateY(-50%) translateX(0); margin-right: 6px;
     }
-    .tooltip-btn.left:hover::after {
-        transform: translateY(-50%) translateX(-4px);
+    .tooltip-left:hover::after { transform: translateY(-50%) translateX(-4px); }
+
+    /* ファイル入力のツールチップ（Wrapperにつける） */
+    .file-input-wrapper[data-tooltip]::after {
+        top: 50%; right: 100%; transform: translateY(-50%) translateX(0); margin-right: 6px;
     }
+    .file-input-wrapper[data-tooltip]:hover::after { transform: translateY(-50%) translateX(-4px); }
 
     #darkModeBtn {
-        position: absolute; top: 0; right: 0;
-        background: none; border: none; cursor: pointer;
-        width: 32px; height: 32px;
+        position: absolute; top: 0; right: 0; background: none; border: none; cursor: pointer;
+        width: 32px; height: 32px; opacity: 0.8;
     }
+    #darkModeBtn:hover { opacity: 1; }
     #darkModeBtn svg { fill: var(--text-color); width: 100%; height: 100%; }
 </style>
 </head>
@@ -397,38 +296,43 @@
             <svg id="roulette" viewBox="0 0 400 400"></svg>
         </div>
         <div class="controls">
+            <!-- 入力グループ -->
             <div class="input-group">
                 <input type="text" id="itemInput" placeholder="項目を入力">
                 <button onclick="addItem()">追加</button>
             </div>
             
+            <!-- ファイル操作グループ -->
             <div class="file-area">
                 <div class="file-group">
-                    <!-- ファイル入力（ドラッグドロップ対応エリア） -->
-                    <div class="file-input-wrapper" id="dropZone">
+                    <div class="file-input-wrapper" id="dropZone" data-tooltip="CSV:復元 / TXT:追加">
+                        <!-- Inputを透明にして前面に配置 -->
                         <input type="file" id="fileInput" accept=".csv,.txt">
-                        <label for="fileInput" class="custom-file-btn tooltip-btn left" data-tooltip="CSV:復元 / TXT:追加">
-                            ファイル選択
-                        </label>
+                        <!-- 見た目用のボタン -->
+                        <div class="custom-file-btn">ファイル選択</div>
                     </div>
                     
-                    <button class="icon-only tooltip-btn right" data-tooltip="現在の状態を保存" onclick="exportCSV()">
+                    <button class="icon-only tooltip-btn tooltip-right" data-tooltip="現在の状態を保存" onclick="exportCSV()">
                         <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
                     </button>
                 </div>
                 <div id="fileNameDisplay"></div>
             </div>
 
+            <!-- アクションボタン群 -->
             <div class="action-group">
-                <button class="tooltip-btn action" data-tooltip="抽選結果を除外しない" onclick="startRoulette(false)">START</button>
-                <button class="tooltip-btn action" data-tooltip="抽選結果を除外する" onclick="startRoulette(true)">START & REMOVE</button>
+                <button class="tooltip-btn tooltip-left" data-tooltip="抽選結果を除外しない" onclick="startRoulette(false)">START</button>
+                <button class="tooltip-btn tooltip-right" data-tooltip="抽選結果を除外する" onclick="startRoulette(true)">START & REMOVE</button>
+            </div>
+            <div class="action-group">
+                <button class="tooltip-btn clear-btn tooltip-left" data-tooltip="項目リストを全削除" onclick="clearList()">CLEAR LIST</button>
+                <button class="tooltip-btn clear-btn tooltip-right" data-tooltip="履歴と状態をリセット" onclick="clearHistory()">RESET</button>
             </div>
         </div>
     </div>
 
     <div id="history">
         <h2>抽選結果</h2>
-        <button onclick="clearHistory()">クリア</button>
         <ul id="historyList"></ul>
     </div>
 </div>
@@ -457,12 +361,9 @@ function addItem(text = null) {
     updateUI();
 }
 
-// ファイル読み込み共通処理
 function loadAndProcessFile(file) {
     if (!file) return;
-
     document.getElementById('fileNameDisplay').textContent = file.name;
-
     const reader = new FileReader();
     reader.onload = ev => {
         const content = ev.target.result;
@@ -478,32 +379,26 @@ function loadAndProcessFile(file) {
     reader.readAsText(file);
 }
 
-// input changeイベント
 document.getElementById('fileInput').addEventListener('change', e => {
     loadAndProcessFile(e.target.files[0]);
     e.target.value = ''; 
 });
 
-// ドラッグ＆ドロップイベント設定
 const dropZone = document.getElementById('dropZone');
 
 dropZone.addEventListener('dragover', e => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     dropZone.classList.add('dragover');
 });
 
 dropZone.addEventListener('dragleave', e => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     dropZone.classList.remove('dragover');
 });
 
 dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     dropZone.classList.remove('dragover');
-    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         loadAndProcessFile(e.dataTransfer.files[0]);
     }
@@ -578,6 +473,15 @@ function restoreFromCSV(csvText) {
 function updateUI() {
     renderList();
     renderRoulette();
+}
+
+function clearList() {
+    if (!items.length) return;
+    if (confirm('項目リストを全て削除しますか？')) {
+        items = [];
+        lastWinnerId = null;
+        updateUI();
+    }
 }
 
 function handleDragStart(e) {
