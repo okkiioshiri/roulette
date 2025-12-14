@@ -97,19 +97,30 @@
         border-bottom: 2px solid var(--border-color);
         flex-shrink: 0;
     }
-    #itemList li {
+
+    /* リストアイテム */
+    #itemList li, #historyList li {
         padding: 6px 0;
         border-bottom: 1px solid var(--border-color);
         display: flex;
-        justify-content: space-between;
         align-items: center;
         gap: 8px;
         position: relative;
+        list-style: none;
+    }
+    #itemList li {
+        justify-content: space-between;
         cursor: grab;
     }
     #itemList li:active { cursor: grabbing; }
     #itemList li.dragging { opacity: 0.5; background: var(--highlight-color); }
     #itemList li.over { border-top: 2px solid var(--accent-color); }
+    
+    #historyList li {
+        justify-content: flex-start;
+        padding-left: 4px;
+    }
+
     .item-text {
         flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
     }
@@ -174,11 +185,14 @@
         border: 1px solid var(--border-color); border-radius: 4px; line-height: 38px;
     }
 
-    /* Inputの隠し方を変更：display:noneではなく、透明にして配置 */
+    /* ★重要修正★ Inputの透明配置（最前面に配置） */
     #fileInput {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
-        opacity: 0; cursor: pointer; z-index: 10;
+        opacity: 0; 
+        cursor: pointer; 
+        z-index: 10; /* ボタンより前面に配置してクリックを受け取る */
+        display: block; /* 以前の display: none を削除 */
     }
 
     /* ボタン共通（80%透過） */
@@ -208,12 +222,12 @@
     .file-input-wrapper {
         flex: 1; position: relative; display: flex; align-items: center; justify-content: stretch;
     }
+    /* 見た目用のボタン（Inputの下に配置） */
     .custom-file-btn {
         width: 100%; height: 100%;
-        pointer-events: none; /* ラベル自体はクリックを透過させ、背面のInputに任せる、またはInputを前面に */
+        pointer-events: none; /* クリックを透過させて下のinputに届ける */
+        z-index: 1;
     }
-    /* Inputが前面にあるので、ラベルのスタイルはInputの後ろに見えるように */
-    /* 修正: Inputを前面に置くため、ラベルは見た目だけ担当 */
     
     .file-input-wrapper.dragover .custom-file-btn {
         background: var(--accent-color); color: white;
@@ -269,15 +283,30 @@
     }
     .file-input-wrapper[data-tooltip]:hover::after { transform: translateY(-50%) translateX(-4px); }
 
+    /* ★重要修正★ ダークモード切替ボタン (右上固定・z-index最大) */
     #darkModeBtn {
-        position: absolute; top: 0; right: 0; background: none; border: none; cursor: pointer;
-        width: 32px; height: 32px; opacity: 0.8;
+        position: fixed; 
+        top: 15px; 
+        right: 15px; 
+        background: none; 
+        border: none; 
+        cursor: pointer;
+        width: 32px; 
+        height: 32px; 
+        opacity: 0.4;
+        z-index: 9999; /* 最前面 */
+        transition: opacity 0.3s;
     }
     #darkModeBtn:hover { opacity: 1; }
     #darkModeBtn svg { fill: var(--text-color); width: 100%; height: 100%; }
 </style>
 </head>
 <body class="dark">
+
+<!-- ダークモードボタン（右上固定） -->
+<button id="darkModeBtn" title="ダークモード切替">
+    <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c4.97 0 9-4.03 9-9a9 9 0 0 0-9-9z"/></svg>
+</button>
 
 <div class="container">
     <div id="itemList">
@@ -287,9 +316,6 @@
 
     <div class="main">
         <input id="titleInput" type="text" value="ルーレット" />
-        <button id="darkModeBtn" title="ダークモード切替">
-            <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c4.97 0 9-4.03 9-9a9 9 0 0 0-9-9z"/></svg>
-        </button>
         <div id="selectedItem"></div>
         <div class="roulette-wrapper">
             <div class="pointer"></div>
@@ -306,9 +332,9 @@
             <div class="file-area">
                 <div class="file-group">
                     <div class="file-input-wrapper" id="dropZone" data-tooltip="CSV:復元 / TXT:追加">
-                        <!-- Inputを透明にして前面に配置 -->
+                        <!-- Inputを透明にして前面に配置 (z-index: 10) -->
                         <input type="file" id="fileInput" accept=".csv,.txt">
-                        <!-- 見た目用のボタン -->
+                        <!-- 見た目用のボタン (pointer-events: none) -->
                         <div class="custom-file-btn">ファイル選択</div>
                     </div>
                     
@@ -325,7 +351,7 @@
                 <button class="tooltip-btn tooltip-right" data-tooltip="抽選結果を除外する" onclick="startRoulette(true)">START & REMOVE</button>
             </div>
             <div class="action-group">
-                <button class="tooltip-btn clear-btn tooltip-left" data-tooltip="項目リストを全削除" onclick="clearList()">CLEAR LIST</button>
+                <button class="tooltip-btn clear-btn tooltip-left" data-tooltip="項目リストを全削除" onclick="clearList()">CLEAR</button>
                 <button class="tooltip-btn clear-btn tooltip-right" data-tooltip="履歴と状態をリセット" onclick="clearHistory()">RESET</button>
             </div>
         </div>
@@ -346,6 +372,7 @@ let dragSrcEl = null;
 
 document.addEventListener('DOMContentLoaded', () => { renderRoulette(); });
 
+// ダークモード切替
 document.getElementById('darkModeBtn').addEventListener('click', () => {
     document.body.classList.toggle('dark');
     renderRoulette();
