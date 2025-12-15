@@ -280,7 +280,7 @@
     button:active, .custom-file-btn:active { transform: translateY(1px); opacity: 1; }
 
     /* --- Primary Button --- */
-    button.primary-btn, #btnAdd, .custom-file-btn, #btnExport {
+    button.primary-btn, #btnAdd, .custom-file-btn, #btnExport, #btnShare {
         background: var(--btn-primary-bg); color: var(--btn-primary-text);
         border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
@@ -307,9 +307,9 @@
         z-index: 1;
     }
 
-    /* --- ボタン幅調整 --- */
-    #btnAdd, #btnExport { width: 80px; flex: 0 0 80px; }
-    #btnExport svg { width: 22px; height: 22px; fill: currentColor; }
+    /* --- ボタン幅調整（シェアボタンを追加） --- */
+    #btnAdd, #btnExport, #btnShare { width: 80px; flex: 0 0 80px; }
+    #btnExport svg, #btnShare svg { width: 22px; height: 22px; fill: currentColor; }
     .action-group button { flex: 1; min-width: 140px; }
 
     /* --- サブ操作ボタン (Outline) --- */
@@ -359,11 +359,11 @@
         background: none; border: none; padding: 8px; height: auto;
         font-size: 18px; color: var(--text-color); opacity: 0.6; 
     }
-    .icon-btn:hover { opacity: 1; transform: scale(1.1); background: none; }
     .icon-btn.trash-btn:hover { color: var(--danger-color); }
+    .icon-btn:hover { opacity: 1; transform: scale(1.1); background: none; }
 
     /* ==========================================================================
-       6. ツールチップ & その他
+       6. ツールチップ & トースト通知
        ========================================================================== */
     #global-tooltip {
         position: fixed; background: var(--tooltip-bg); color: var(--tooltip-text);
@@ -372,6 +372,21 @@
         transition: opacity 0.15s ease;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         backdrop-filter: blur(4px); white-space: nowrap; font-weight: 500; max-width: 90vw; 
+    }
+
+    /* トースト通知 */
+    .toast-notification {
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+        background: var(--tooltip-bg); color: var(--tooltip-text);
+        padding: 10px 24px; border-radius: 30px;
+        font-size: 14px; font-weight: 600;
+        opacity: 0; pointer-events: none; z-index: 20000;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+        white-space: nowrap;
+    }
+    .toast-notification.show {
+        opacity: 1; transform: translateX(-50%) translateY(0);
     }
 
     #darkModeBtn {
@@ -438,6 +453,9 @@
                     <button id="btnExport" class="primary-btn" onclick="exportCSV()" data-tooltip="現在の状態をCSV保存">
                         <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
                     </button>
+                    <button id="btnShare" class="primary-btn" onclick="shareCurrentState()" data-tooltip="現在の状態をURLで共有">
+                        <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                    </button>
                 </div>
                 <div id="fileNameDisplay"></div>
             </div>
@@ -493,6 +511,7 @@ const TEXT_CONFIG = {
     tooltips: {
         dropZone: "TXT:リストの一括追加 / CSV:状態を復元",
         export: "現在の状態をCSV保存",
+        share: "現在の状態をURLで共有",
         spinCount: "連続抽選回数を指定",
         fastMode: "高速処理: 一括抽選モード",
         start: "抽選結果を除外しない",
@@ -509,7 +528,9 @@ const TEXT_CONFIG = {
         confirmClear: "全てのデータ（リスト・履歴）を削除して初期状態に戻しますか？",
         confirmReset: "履歴を削除し、全ての項目を抽選対象に戻しますか？",
         outOfStock: "抽選対象がなくなりました。",
-        fastModeStatus: "⚡高速モード中"
+        fastModeStatus: "⚡高速モード中",
+        shareSuccess: "共有URLをクリップボードに保存しました",
+        shareError: "URLが長すぎるなどの理由でコピーできませんでした。"
     },
     sampleData: [
         { text: "りんご", desc: "赤い果物。医者いらず。" },
@@ -529,8 +550,14 @@ let isSpinning = false;
 let isFastMode = false;
 
 document.addEventListener('DOMContentLoaded', () => { 
+    // 共有URLパラメータのチェックと復元
+    restoreFromShareURL();
+
     applyUIStrings(); 
-    renderRoulette();
+    // リストのレンダリングはrestoreFromShareURLまたはaddItem等で行われるが、
+    // 初期状態が空の場合はここでルーレット（空の円）を描画する
+    if(items.length === 0) renderRoulette();
+    
     initTooltip(); 
     document.querySelector('.roulette-wrapper').addEventListener('click', () => {
         startRoulette(lastModeRemove);
@@ -560,6 +587,7 @@ function applyUIStrings() {
     document.getElementById('btnReset').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.reset);
     document.getElementById('dropZone').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.dropZone);
     document.getElementById('btnExport').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.export);
+    document.getElementById('btnShare').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.share);
 }
 
 document.getElementById('darkModeBtn').addEventListener('click', () => {
@@ -598,6 +626,31 @@ function initTooltip() {
             tooltip.style.top = `${top}px`;
         }
     });
+}
+
+/**
+ * トースト通知を表示する
+ */
+function showToast(message) {
+    // 既存のトーストがあれば削除
+    const existing = document.querySelector('.toast-notification');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // アニメーション用クラス付与
+    requestAnimationFrame(() => {
+        toast.classList.add('show');
+    });
+
+    // 2秒後に消す
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
 
 function toggleFastMode() {
@@ -692,6 +745,95 @@ function exportCSV() {
     a.click();
     URL.revokeObjectURL(url);
 }
+
+// ---------------------------------------------------------
+// シェア & URL復元機能
+// ---------------------------------------------------------
+
+/**
+ * 現在の状態（タイトルとリスト）をURLパラメータに変換してクリップボードにコピーする
+ */
+async function shareCurrentState() {
+    if (items.length === 0) {
+        alert(TEXT_CONFIG.messages.noItem);
+        return;
+    }
+
+    const title = document.getElementById('titleInput').value;
+    const saveData = {
+        t: title,
+        i: items.map(item => ({ t: item.text, a: item.active ? 1 : 0, d: item.desc }))
+    };
+
+    try {
+        // 日本語を含むJSONをBase64にエンコード
+        const jsonStr = JSON.stringify(saveData);
+        const base64Params = btoa(unescape(encodeURIComponent(jsonStr)));
+        
+        // URL構築
+        const url = new URL(window.location.href);
+        url.searchParams.set('data', base64Params);
+        const shareUrl = url.toString();
+
+        // クリップボードへコピー
+        await navigator.clipboard.writeText(shareUrl);
+        
+        // トースト通知を表示（alert廃止）
+        showToast(TEXT_CONFIG.messages.shareSuccess);
+
+    } catch (e) {
+        console.error(e);
+        // エラー時はユーザーに知らせるため、ここだけはトーストかアラートで
+        showToast(TEXT_CONFIG.messages.shareError);
+    }
+}
+
+/**
+ * URLパラメータ 'data' があればリストを復元する
+ */
+function restoreFromShareURL() {
+    const params = new URLSearchParams(window.location.search);
+    const data = params.get('data');
+    if (!data) return;
+
+    try {
+        // Base64デコード（URLパラメータで+がスペースになる問題への対処を含む）
+        const base64Str = data.replace(/ /g, '+');
+        const jsonStr = decodeURIComponent(escape(atob(base64Str)));
+        const savedData = JSON.parse(jsonStr);
+
+        if (savedData.t) {
+            document.getElementById('titleInput').value = savedData.t;
+        }
+
+        if (Array.isArray(savedData.i)) {
+            items = [];
+            idCounter = 0;
+            savedData.i.forEach(item => {
+                items.push({
+                    id: idCounter++,
+                    text: item.t,
+                    active: item.a === 1,
+                    desc: item.d || ''
+                });
+            });
+            
+            // 履歴と結果表示はクリア
+            document.getElementById('historyList').innerHTML = '';
+            document.getElementById('selectedItem').innerHTML = '';
+            
+            // ページ遷移でのリロード時にパラメータを消す（クリーンなURLに戻す）
+            window.history.replaceState(null, '', window.location.pathname);
+            
+            // UIを更新してリストを表示させる
+            updateUI();
+        }
+    } catch (e) {
+        console.error("Failed to restore from URL", e);
+    }
+}
+
+// ---------------------------------------------------------
 
 function parseCSVLine(line) {
     const result = [];
