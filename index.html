@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <title>stylish roulette</title>
 <style>
-    /* =========================================
-       テーマ・色設定 (Variables)
-       ========================================= */
+    /* ==========================================================================
+       1. デザイン設定・変数 (Theme & Variables)
+       ========================================================================== */
     :root {
         --bg-color: #f9f9f9;
         --text-color: #333;
@@ -16,7 +16,7 @@
         --accent-color: #007aff;
         --danger-color: #ff3b30;
         --shadow-color: rgba(0, 0, 0, 0.15);
-        --tooltip-bg: rgba(51, 51, 51, 0.6);
+        --tooltip-bg: rgba(51, 51, 51, 0.95);
     }
     body.dark {
         --bg-color: #1e1e1e;
@@ -27,12 +27,12 @@
         --accent-color: #4da3ff;
         --danger-color: #ff453a;
         --shadow-color: rgba(0, 0, 0, 0.5);
-        --tooltip-bg: rgba(249, 249, 249, 0.6);
+        --tooltip-bg: rgba(249, 249, 249, 0.95);
     }
 
-    /* =========================================
-       基本レイアウト
-       ========================================= */
+    /* ==========================================================================
+       2. 基本レイアウト (Layout)
+       ========================================================================== */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: var(--bg-color);
@@ -56,11 +56,15 @@
         margin: 0 5px;
         position: relative;
         flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
     }
 
-    /* =========================================
-       サイドバー (List & History)
-       ========================================= */
+    /* ==========================================================================
+       3. サイドバー: リスト & 履歴 (Sidebar)
+       ========================================================================== */
     #itemList, #history {
         width: 260px;
         background: var(--card-bg);
@@ -71,22 +75,28 @@
         margin: 10px 0;
         display: flex;
         flex-direction: column;
-        max-height: calc(100vh - 150px);
-        overflow-y: auto;
-        overflow-x: hidden;
+        max-height: calc(100vh - 40px);
         transition: background 0.3s, border-color 0.3s;
         box-shadow: 0 2px 8px var(--shadow-color);
+        box-sizing: border-box;
+        flex-shrink: 0; 
     }
     #list, #historyList {
         list-style: none;
         padding: 0;
         margin: 0;
         width: 100%;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 0;
     }
-    #itemList::-webkit-scrollbar, #history::-webkit-scrollbar {
+    #itemList::-webkit-scrollbar, #history::-webkit-scrollbar,
+    #list::-webkit-scrollbar, #historyList::-webkit-scrollbar {
         width: 6px;
     }
-    #itemList::-webkit-scrollbar-thumb, #history::-webkit-scrollbar-thumb {
+    #itemList::-webkit-scrollbar-thumb, #history::-webkit-scrollbar-thumb,
+    #list::-webkit-scrollbar-thumb, #historyList::-webkit-scrollbar-thumb {
         background: var(--border-color);
         border-radius: 4px;
     }
@@ -107,6 +117,7 @@
         gap: 8px;
         position: relative;
         list-style: none;
+        flex-shrink: 0;
     }
     #itemList li {
         justify-content: space-between;
@@ -119,29 +130,63 @@
     #historyList li {
         justify-content: flex-start;
         padding-left: 4px;
+        cursor: default;
+        white-space: normal;
+        word-break: break-word;
+        line-height: 1.4;
     }
 
     .item-text {
-        flex: 1; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none;
+        flex: 1; text-align: left; 
+        white-space: normal; word-break: break-word; overflow: visible; 
+        pointer-events: auto; line-height: 1.4; padding: 2px 0;
     }
     .highlight { background-color: var(--highlight-color); }
     .final-highlight { background-color: var(--highlight-color); font-weight: bold; }
     .inactive .item-text { color: #aaa; opacity: 0.6; }
 
-    /* =========================================
-       ルーレット本体
-       ========================================= */
-    #titleInput {
-        font-size: 28px; font-weight: 500; text-align: center; border: none; background: transparent;
-        color: var(--text-color); outline: none; width: calc(100% - 20px); margin: 0 auto 10px auto; display: block;
+    /* ==========================================================================
+       4. ルーレット & タイトル (Roulette & Title)
+       ========================================================================== */
+    .title-wrapper {
+        position: relative;
+        margin: 0 auto 20px auto;
+        width: fit-content;
+        min-width: 200px;
     }
+    #titleInput {
+        font-size: 32px; font-weight: 700; text-align: center;
+        border: none; border-bottom: 2px solid transparent;
+        background: transparent; color: var(--text-color);
+        outline: none; width: 100%; padding: 5px 10px;
+        transition: all 0.3s ease; letter-spacing: 1.5px;
+        font-family: inherit;
+    }
+    #titleInput:hover, #titleInput:focus {
+        border-bottom-color: var(--accent-color);
+        letter-spacing: 2.5px;
+    }
+    #titleInput::placeholder { color: var(--border-color); font-weight: normal; }
+
     #selectedItem {
-        font-size: 24px; font-weight: bold; margin: 20px 0; min-height: 30px;
+        font-size: 24px; font-weight: bold; margin: 20px 0; min-height: 50px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        width: 100%;
+    }
+    .winner-desc {
+        font-size: 15px; color: var(--text-color); opacity: 0.7;
+        margin-top: 4px; font-weight: normal; letter-spacing: 0.05em;
+        white-space: pre-wrap; word-break: break-word; 
+        max-width: 480px; 
+        width: 95%; 
+        padding: 0 10px; box-sizing: border-box;
     }
     .roulette-wrapper {
         position: relative; width: 400px; height: 400px; margin: 0 auto;
         border-radius: 50%; box-shadow: 0 10px 25px var(--shadow-color);
+        flex-shrink: 0; cursor: pointer; transition: transform 0.1s;
     }
+    .roulette-wrapper:active { transform: scale(0.98); }
     .roulette-wrapper::after {
         content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
         width: 40px; height: 40px; background: var(--card-bg); border: 4px solid var(--text-color);
@@ -156,145 +201,115 @@
         border-bottom: 24px solid var(--text-color); z-index: 20; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
     }
 
-    /* =========================================
-       ボタン・コントロール
-       ========================================= */
+    /* ==========================================================================
+       5. コントロールエリア (Controls)
+       ========================================================================== */
     .controls {
         display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; width: 100%;
+        margin-bottom: 10px;
     }
-    .input-group, .action-group, .file-group {
+    .input-group, .action-group, .file-group, .setting-group {
         display: flex; justify-content: center; gap: 10px; width: 100%; max-width: 480px;
+        position: relative; z-index: 5;
     }
     .action-group + .action-group { margin-top: -5px; }
     .file-area {
         display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; gap: 5px;
+        position: relative; z-index: 6;
     }
 
-    /* 高さ統一 */
-    .input-group input[type="text"], 
-    .file-input-wrapper, 
-    button, 
-    .custom-file-btn {
-        height: 40px; 
-        box-sizing: border-box;
+    .setting-group { align-items: center; margin-bottom: -5px; }
+    .spin-count-wrapper {
+        display: flex; align-items: center; gap: 8px;
+        background: transparent; padding: 2px 8px;
+        border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;
+    }
+    .spin-count-wrapper:hover { opacity: 1; }
+    
+    .spin-label { font-size: 13px; color: var(--text-color); font-weight: 500; }
+    
+    #spinCountInput {
+        width: 50px; height: 28px; text-align: center;
+        background: var(--card-bg); color: var(--text-color);
+        border: 1px solid var(--border-color); border-radius: 4px;
+        font-size: 14px; -moz-appearance: textfield; 
+    }
+    #spinCountInput::-webkit-outer-spin-button,
+    #spinCountInput::-webkit-inner-spin-button {
+        -webkit-appearance: none; margin: 0;
     }
 
+    .fast-mode-on {
+        color: var(--accent-color) !important; opacity: 1 !important;
+        filter: drop-shadow(0 0 3px var(--accent-color)); font-weight: bold;
+    }
+    #fastModeBtn {
+        width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;
+    }
+
+    .input-group input[type="text"], .file-input-wrapper, button, .custom-file-btn { 
+        height: 40px; box-sizing: border-box; 
+    }
     .input-group input[type="text"] {
         flex: 1; padding: 0 10px; font-size: 16px;
         background: var(--card-bg); color: var(--text-color);
         border: 1px solid var(--border-color); border-radius: 4px; line-height: 38px;
     }
 
-    /* ★重要修正★ Inputの透明配置（最前面に配置） */
-    #fileInput {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        opacity: 0; 
-        cursor: pointer; 
-        z-index: 10; /* ボタンより前面に配置してクリックを受け取る */
-        display: block; /* 以前の display: none を削除 */
-    }
-
-    /* ボタン共通（80%透過） */
-    button, .custom-file-btn {
-        background: var(--text-color); color: var(--bg-color);
-        border: none; border-radius: 6px; cursor: pointer;
-        transition: background 0.3s, transform 0.2s, opacity 0.3s;
-        position: relative; display: inline-flex; align-items: center; justify-content: center;
-        font-size: 16px;
-        opacity: 0.8; /* 透過設定 */
-    }
-    button:hover, .custom-file-btn:hover {
-        opacity: 1;
-    }
-    button.clear-btn:hover { background-color: var(--danger-color); color: white; opacity: 1; }
-
-    /* 横幅合わせ：追加ボタンと保存ボタン */
-    .input-group button, 
-    .file-group button.icon-only {
-        width: 60px; /* 統一 */
-        padding: 0; flex: 0 0 60px;
-    }
-    
-    .action-group button { flex: 1; white-space: nowrap; padding: 0 10px; }
-
-    /* ファイル入力ラッパー */
     .file-input-wrapper {
         flex: 1; position: relative; display: flex; align-items: center; justify-content: stretch;
+        cursor: pointer;
     }
-    /* 見た目用のボタン（Inputの下に配置） */
-    .custom-file-btn {
-        width: 100%; height: 100%;
-        pointer-events: none; /* クリックを透過させて下のinputに届ける */
-        z-index: 1;
+    #fileInput { 
+        display: none;
     }
-    
+    .custom-file-btn { 
+        width: 100%; height: 100%; z-index: 1; pointer-events: none; 
+    }
     .file-input-wrapper.dragover .custom-file-btn {
         background: var(--accent-color); color: white;
         box-shadow: 0 0 10px var(--accent-color); transform: scale(1.02); opacity: 1;
     }
 
+    button, .custom-file-btn {
+        background: var(--text-color); color: var(--bg-color);
+        border: none; border-radius: 6px; cursor: pointer;
+        transition: background 0.3s, transform 0.2s, opacity 0.3s;
+        position: relative; display: inline-flex; align-items: center; justify-content: center;
+        font-size: 16px; opacity: 0.8; z-index: 20;
+    }
+    button:hover, .custom-file-btn:hover { opacity: 1; }
+    button.clear-btn:hover { background-color: var(--danger-color); color: white; opacity: 1; }
+    
+    .input-group button, .file-group button.icon-only { width: 60px; padding: 0; flex: 0 0 60px; }
+    .action-group button { flex: 1; white-space: nowrap; padding: 0 10px; }
     button.icon-only svg { width: 22px; height: 22px; fill: currentColor; }
     
     #fileNameDisplay {
         font-size: 13px; color: var(--text-color); opacity: 0.8;
         height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
     }
-    
-    /* リスト内アイコン */
     .icon-btn {
-        background: none; border: none; padding: 4px; font-size: 18px; color: var(--text-color);
-        opacity: 0.8; height: auto;
+        background: none; border: none; padding: 4px; font-size: 18px; color: var(--text-color); opacity: 0.8; height: auto;
     }
     .icon-btn:hover { color: var(--accent-color); opacity: 1; }
     .icon-btn.trash-btn:hover { color: var(--danger-color); }
 
-    /* ツールチップ */
-    [data-tooltip]::after {
-        content: attr(data-tooltip); position: absolute;
-        background: var(--tooltip-bg); color: var(--bg-color);
-        padding: 5px 10px; font-size: 13px; border-radius: 6px;
-        white-space: nowrap; opacity: 0; pointer-events: none;
-        transition: opacity 0.2s ease, transform 0.2s ease;
-        z-index: 1000; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        backdrop-filter: blur(2px);
+    /* ==========================================================================
+       6. ツールチップ (JS制御)
+       ========================================================================== */
+    #global-tooltip {
+        position: fixed; background: var(--tooltip-bg); color: var(--bg-color);
+        padding: 8px 12px; font-size: 13px; border-radius: 6px;
+        pointer-events: none; z-index: 10000; opacity: 0;
+        transition: opacity 0.15s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        backdrop-filter: blur(4px); white-space: nowrap; font-weight: normal; max-width: 90vw; 
     }
-    [data-tooltip]:hover::after { opacity: 1; }
 
-    /* 位置指定 */
-    .tooltip-btn.action::after, .tooltip-btn.list::after {
-        top: 100%; left: 50%; transform: translateX(-50%) translateY(0); margin-top: 4px;
-    }
-    .tooltip-btn.action:hover::after, .tooltip-btn.list:hover::after { transform: translateX(-50%) translateY(4px); }
-
-    .tooltip-right::after {
-        top: 50%; left: 100%; transform: translateY(-50%) translateX(0); margin-left: 6px;
-    }
-    .tooltip-right:hover::after { transform: translateY(-50%) translateX(4px); }
-
-    .tooltip-left::after {
-        top: 50%; right: 100%; left: auto; transform: translateY(-50%) translateX(0); margin-right: 6px;
-    }
-    .tooltip-left:hover::after { transform: translateY(-50%) translateX(-4px); }
-
-    /* ファイル入力のツールチップ（Wrapperにつける） */
-    .file-input-wrapper[data-tooltip]::after {
-        top: 50%; right: 100%; transform: translateY(-50%) translateX(0); margin-right: 6px;
-    }
-    .file-input-wrapper[data-tooltip]:hover::after { transform: translateY(-50%) translateX(-4px); }
-
-    /* ★重要修正★ ダークモード切替ボタン (右上固定・z-index最大) */
     #darkModeBtn {
-        position: fixed; 
-        top: 15px; 
-        right: 15px; 
-        background: none; 
-        border: none; 
-        cursor: pointer;
-        width: 32px; 
-        height: 32px; 
-        opacity: 0.4;
-        z-index: 9999; /* 最前面 */
+        position: fixed; top: 15px; right: 15px; 
+        background: none; border: none; cursor: pointer;
+        width: 32px; height: 32px; opacity: 0.4; z-index: 9999;
         transition: opacity 0.3s;
     }
     #darkModeBtn:hover { opacity: 1; }
@@ -303,76 +318,206 @@
 </head>
 <body class="dark">
 
-<!-- ダークモードボタン（右上固定） -->
+<!-- ダークモード切替 -->
 <button id="darkModeBtn" title="ダークモード切替">
     <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c4.97 0 9-4.03 9-9a9 9 0 0 0-9-9z"/></svg>
 </button>
 
 <div class="container">
+    <!-- 左サイドバー: 抽選リスト -->
     <div id="itemList">
-        <h2>抽選リスト</h2>
+        <h2 id="txtListHeader">抽選リスト</h2>
         <ul id="list"></ul>
     </div>
 
+    <!-- メインエリア -->
     <div class="main">
-        <input id="titleInput" type="text" value="ルーレット" />
+        <!-- タイトル -->
+        <div class="title-wrapper">
+            <input id="titleInput" type="text" value="ルーレット" placeholder="タイトルを入力" />
+        </div>
+        
+        <!-- 結果表示 -->
         <div id="selectedItem"></div>
+        
+        <!-- ルーレット描画 -->
         <div class="roulette-wrapper">
             <div class="pointer"></div>
             <svg id="roulette" viewBox="0 0 400 400"></svg>
         </div>
+        
+        <!-- 操作パネル -->
         <div class="controls">
-            <!-- 入力グループ -->
+            <!-- 項目追加 -->
             <div class="input-group">
                 <input type="text" id="itemInput" placeholder="抽選項目を入力">
-                <button onclick="addItem()">追加</button>
+                <button id="btnAdd" onclick="addItem()">追加</button>
             </div>
             
-            <!-- ファイル操作グループ -->
+            <!-- ファイル操作 -->
             <div class="file-area">
                 <div class="file-group">
-                    <div class="file-input-wrapper" id="dropZone" data-tooltip="TXT:リストの一括追加 / CSV:状態を復元""
-                        <!-- Inputを透明にして前面に配置 (z-index: 10) -->
-                        <input type="file" id="fileInput" accept=".csv,.txt">
-                        <!-- 見た目用のボタン (pointer-events: none) -->
-                        <div class="custom-file-btn">ファイル選択</div>
-                    </div>
-                    
-                    <button class="icon-only tooltip-btn tooltip-right" data-tooltip="現在の状態をCSV保存" onclick="exportCSV()">
+                    <label class="file-input-wrapper" id="dropZone" data-tooltip="TXT:リストの一括追加 / CSV:状態を復元">
+                        <input type="file" id="fileInput" accept=".csv,.txt" title="">
+                        <div class="custom-file-btn" id="btnFileSelect">ファイル選択</div>
+                    </label>
+                    <button class="icon-only" id="btnExport" onclick="exportCSV()" data-tooltip="現在の状態をCSV保存（空ならサンプル出力）">
                         <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
                     </button>
                 </div>
                 <div id="fileNameDisplay"></div>
             </div>
 
-            <!-- アクションボタン群 -->
-            <div class="action-group">
-                <button class="tooltip-btn tooltip-left" data-tooltip="抽選結果を除外しない" onclick="startRoulette(false)">START</button>
-                <button class="tooltip-btn tooltip-right" data-tooltip="抽選結果を除外する" onclick="startRoulette(true)">START & REMOVE</button>
+            <!-- 回数・高速設定 -->
+            <div class="setting-group">
+                <div class="spin-count-wrapper" id="spinCountWrapper" data-tooltip="連続して抽選を行う回数を指定します。&#10;例:「4」と入力すると4回連続で回ります。">
+                    <span class="spin-label" id="txtSpinCount">連続回数:</span>
+                    <input type="number" id="spinCountInput" value="1" min="1" max="99">
+                </div>
+                <button id="fastModeBtn" class="icon-btn" onclick="toggleFastMode()" data-tooltip="高速処理: オンにすると1回の回転時間で&#10;全回数分の抽選を一気に行います">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+                </button>
             </div>
+
+            <!-- 実行ボタン -->
             <div class="action-group">
-                <button class="tooltip-btn clear-btn tooltip-left" data-tooltip="抽選リストをクリア" onclick="clearList()">CLEAR</button>
-                <button class="tooltip-btn clear-btn tooltip-right" data-tooltip="抽選結果をリセット" onclick="clearHistory()">RESET</button>
+                <button id="btnStart" onclick="startRoulette(false)" data-tooltip="抽選結果を除外しない">START</button>
+                <button id="btnStartRemove" onclick="startRoulette(true)" data-tooltip="抽選結果を除外する">START & REMOVE</button>
+            </div>
+            
+            <!-- クリア・リセット -->
+            <div class="action-group">
+                <button class="clear-btn" id="btnClear" onclick="clearAllData()" data-tooltip="全てのデータ（リスト・履歴）を削除して&#10;初期状態に戻します">CLEAR</button>
+                <button class="clear-btn" id="btnReset" onclick="resetStatus()" data-tooltip="履歴を削除し、全ての項目を&#10;抽選対象に戻します">RESET</button>
             </div>
         </div>
     </div>
 
+    <!-- 右サイドバー: 履歴 -->
     <div id="history">
-        <h2>抽選結果</h2>
+        <h2 id="txtHistoryHeader">抽選結果</h2>
         <ul id="historyList"></ul>
     </div>
 </div>
 
 <script>
+// ==========================================================================
+// 画面内テキストの一元管理 (TEXT CONFIG)
+// （HTML内のテキストよりもこちらの項目が優先される。はず。）
+// ==========================================================================
+const TEXT_CONFIG = {
+    titles: {
+        pageTitle: "stylish roulette",
+        listHeader: "抽選リスト",
+        historyHeader: "抽選結果",
+        defaultInputTitle: "ルーレット",
+        titlePlaceholder: "タイトルを入力"
+    },
+    buttons: {
+        add: "追加",
+        fileSelect: "ファイル選択",
+        start: "START",
+        startRemove: "START & REMOVE",
+        clear: "CLEAR",
+        reset: "RESET"
+    },
+    inputs: {
+        itemPlaceholder: "抽選項目を入力"
+    },
+    labels: {
+        spinCount: "連続回数:"
+    },
+    tooltips: {
+        dropZone: "TXT:リストの一括追加 / CSV:状態を復元",
+        export: "現在の状態をCSV保存（空ならサンプル出力）",
+        spinCount: "連続して抽選を行う回数を指定します。\n例:「4」と入力すると4回連続で回ります。",
+        fastMode: "高速処理: オンにすると1回の回転時間で\n全回数分の抽選を一気に行います",
+        start: "抽選結果を除外しない",
+        startRemove: "抽選結果を除外する",
+        clear: "全てのデータ（リスト・履歴）を削除して\n初期状態に戻します",
+        reset: "履歴を削除し、全ての項目を\n抽選対象に戻します",
+        trash: "削除",
+        remove: "外す",
+        restore: "戻す"
+    },
+    messages: {
+        noItem: "抽選対象がありません！",
+        emptySample: "リストが空です。サンプルのCSV（詳細テキスト付き）を出力しますか？",
+        confirmClear: "全てのデータ（リスト・履歴）を削除して初期状態に戻しますか？",
+        confirmReset: "履歴を削除し、全ての項目を抽選対象に戻しますか？",
+        outOfStock: "抽選対象がなくなりました。"
+    },
+    sampleData: [
+        { text: "りんご", desc: "赤い果物。医者いらず。" },
+        { text: "バナナ", desc: "黄色い果物。エネルギー補給に最適。" },
+        { text: "ぶどう", desc: "紫の果物。ポリフェノールたっぷり。" }
+    ]
+};
+
+// ==========================================================================
+// システム変数 (System Variables)
+// ==========================================================================
 let items = []; 
 let idCounter = 0;
 let angle = 0;
 let lastWinnerId = null;
 let dragSrcEl = null;
+let lastModeRemove = false;
+let isSpinning = false;
+let isFastMode = false;
 
-document.addEventListener('DOMContentLoaded', () => { renderRoulette(); });
+// ==========================================================================
+// 初期化処理 (Initialization)
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', () => { 
+    applyUIStrings(); 
+    renderRoulette();
+    initTooltip(); 
+    
+    document.querySelector('.roulette-wrapper').addEventListener('click', () => {
+        startRoulette(lastModeRemove);
+    });
+});
 
-// ダークモード切替
+function applyUIStrings() {
+    document.title = TEXT_CONFIG.titles.pageTitle;
+    document.getElementById('txtListHeader').textContent = TEXT_CONFIG.titles.listHeader;
+    document.getElementById('txtHistoryHeader').textContent = TEXT_CONFIG.titles.historyHeader;
+    
+    const titleInput = document.getElementById('titleInput');
+    if(titleInput.value === "ルーレット" || titleInput.value === "") {
+        titleInput.value = TEXT_CONFIG.titles.defaultInputTitle;
+    }
+    titleInput.placeholder = TEXT_CONFIG.titles.titlePlaceholder;
+
+    document.getElementById('itemInput').placeholder = TEXT_CONFIG.inputs.itemPlaceholder;
+    document.getElementById('btnAdd').textContent = TEXT_CONFIG.buttons.add;
+    document.getElementById('btnFileSelect').textContent = TEXT_CONFIG.buttons.fileSelect;
+    
+    document.getElementById('txtSpinCount').textContent = TEXT_CONFIG.labels.spinCount;
+    document.getElementById('spinCountWrapper').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.spinCount);
+    document.getElementById('fastModeBtn').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.fastMode);
+
+    const btnStart = document.getElementById('btnStart');
+    btnStart.textContent = TEXT_CONFIG.buttons.start;
+    btnStart.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.start);
+
+    const btnStartRemove = document.getElementById('btnStartRemove');
+    btnStartRemove.textContent = TEXT_CONFIG.buttons.startRemove;
+    btnStartRemove.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.startRemove);
+
+    const btnClear = document.getElementById('btnClear');
+    btnClear.textContent = TEXT_CONFIG.buttons.clear;
+    btnClear.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.clear);
+
+    const btnReset = document.getElementById('btnReset');
+    btnReset.textContent = TEXT_CONFIG.buttons.reset;
+    btnReset.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.reset);
+
+    document.getElementById('dropZone').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.dropZone);
+    document.getElementById('btnExport').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.export);
+}
+
 document.getElementById('darkModeBtn').addEventListener('click', () => {
     document.body.classList.toggle('dark');
     renderRoulette();
@@ -380,10 +525,62 @@ document.getElementById('darkModeBtn').addEventListener('click', () => {
 
 document.getElementById('itemInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
+// ==========================================================================
+// ツールチップ制御 (Tooltip Logic)
+// ==========================================================================
+function initTooltip() {
+    const existing = document.getElementById('global-tooltip');
+    if (existing) existing.remove();
+
+    const tooltip = document.createElement('div');
+    tooltip.id = 'global-tooltip';
+    document.body.appendChild(tooltip);
+
+    document.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('[data-tooltip]');
+        if (target) {
+            tooltip.textContent = target.getAttribute('data-tooltip');
+            tooltip.style.opacity = '1';
+        }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        const target = e.target.closest('[data-tooltip]');
+        if (target) {
+            tooltip.style.opacity = '0';
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (tooltip.style.opacity === '1') {
+            const offset = 15;
+            let left = e.clientX + offset;
+            let top = e.clientY + offset;
+            if (left + tooltip.offsetWidth > window.innerWidth) left = e.clientX - tooltip.offsetWidth - offset;
+            if (top + tooltip.offsetHeight > window.innerHeight) top = e.clientY - tooltip.offsetHeight - offset;
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+        }
+    });
+}
+
+// ==========================================================================
+// データ操作・ファイル処理 (Data & File Handling)
+// ==========================================================================
+function toggleFastMode() {
+    isFastMode = !isFastMode;
+    const btn = document.getElementById('fastModeBtn');
+    if (isFastMode) {
+        btn.classList.add('fast-mode-on');
+    } else {
+        btn.classList.remove('fast-mode-on');
+    }
+}
+
 function addItem(text = null) {
     const val = text || document.getElementById('itemInput').value.trim();
     if (!val) return;
-    items.push({ id: idCounter++, text: val, active: true });
+    items.push({ id: idCounter++, text: val, active: true, desc: '' });
     if (!text) document.getElementById('itemInput').value = '';
     updateUI();
 }
@@ -398,7 +595,7 @@ function loadAndProcessFile(file) {
             restoreFromCSV(content);
         } else {
             content.split(/\r?\n/).filter(line => line.trim()).forEach(line => {
-                items.push({ id: idCounter++, text: line, active: true });
+                items.push({ id: idCounter++, text: line, active: true, desc: '' });
             });
             updateUI();
         }
@@ -412,42 +609,43 @@ document.getElementById('fileInput').addEventListener('change', e => {
 });
 
 const dropZone = document.getElementById('dropZone');
-
-dropZone.addEventListener('dragover', e => {
-    e.preventDefault(); e.stopPropagation();
-    dropZone.classList.add('dragover');
-});
-
-dropZone.addEventListener('dragleave', e => {
-    e.preventDefault(); e.stopPropagation();
-    dropZone.classList.remove('dragover');
-});
-
+dropZone.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
 dropZone.addEventListener('drop', e => {
-    e.preventDefault(); e.stopPropagation();
-    dropZone.classList.remove('dragover');
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        loadAndProcessFile(e.dataTransfer.files[0]);
-    }
+    e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) loadAndProcessFile(e.dataTransfer.files[0]);
 });
 
 function exportCSV() {
     const csvContent = [];
-    csvContent.push('Type,Text,Active'); 
-    items.forEach(i => {
-        const text = `"${i.text.replace(/"/g, '""')}"`; 
-        csvContent.push(`Item,${text},${i.active ? 1 : 0}`);
-    });
-    const historyLis = document.querySelectorAll('#historyList li');
-    historyLis.forEach(li => {
-        const text = `"${li.textContent.replace(/"/g, '""')}"`;
-        csvContent.push(`History,${text},`);
-    });
-    if (lastWinnerId !== null) {
-        const winnerItem = items.find(i => i.id === lastWinnerId);
-        if (winnerItem) {
-            const text = `"${winnerItem.text.replace(/"/g, '""')}"`;
-            csvContent.push(`Winner,${text},`);
+    csvContent.push('Type,Text,Active,Description');
+    const title = document.getElementById('titleInput').value.replace(/"/g, '""');
+    csvContent.push(`Title,"${title}",,`);
+
+    if (items.length === 0) {
+        if (!confirm(TEXT_CONFIG.messages.emptySample)) return;
+        TEXT_CONFIG.sampleData.forEach(d => {
+            csvContent.push(`Item,"${d.text}",1,"${d.desc}"`);
+        });
+    } else {
+        items.forEach(i => {
+            const text = `"${i.text.replace(/"/g, '""')}"`;
+            const desc = i.desc ? `"${i.desc.replace(/"/g, '""')}"` : '""';
+            csvContent.push(`Item,${text},${i.active ? 1 : 0},${desc}`);
+        });
+        const historyLis = document.querySelectorAll('#historyList li');
+        historyLis.forEach(li => {
+            const text = `"${li.textContent.replace(/"/g, '""')}"`;
+            const rawDesc = li.getAttribute('data-tooltip') || '';
+            const desc = `"${rawDesc.replace(/"/g, '""')}"`;
+            csvContent.push(`History,${text},,${desc}`);
+        });
+        if (lastWinnerId !== null) {
+            const winnerItem = items.find(i => i.id === lastWinnerId);
+            if (winnerItem) {
+                const text = `"${winnerItem.text.replace(/"/g, '""')}"`;
+                csvContent.push(`Winner,${text},,""`);
+            }
         }
     }
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent.join('\n')], { type: 'text/csv' });
@@ -459,39 +657,67 @@ function exportCSV() {
     URL.revokeObjectURL(url);
 }
 
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+            if (inQuote && line[i + 1] === '"') {
+                current += '"'; i++;
+            } else {
+                inQuote = !inQuote;
+            }
+        } else if (char === ',' && !inQuote) {
+            result.push(current); current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current);
+    return result;
+}
+
 function restoreFromCSV(csvText) {
     items = [];
     idCounter = 0;
     lastWinnerId = null;
     document.getElementById('historyList').innerHTML = '';
-    document.getElementById('selectedItem').textContent = '';
+    document.getElementById('selectedItem').innerHTML = '';
     const lines = csvText.split(/\r?\n/);
     lines.forEach(line => {
         if (!line.trim() || line.startsWith('Type,')) return; 
-        const match = line.match(/^([^,]+),"(.*)",(.*)$/);
-        if (match) {
-            const type = match[1];
-            const text = match[2].replace(/""/g, '"'); 
-            const val = match[3];
-            if (type === 'Item') {
-                const isActive = parseInt(val) === 1;
-                items.push({ id: idCounter++, text: text, active: isActive });
-            } else if (type === 'History') {
-                const ul = document.getElementById('historyList');
-                const li = document.createElement('li');
-                li.textContent = text;
-                ul.appendChild(li);
-            } else if (type === 'Winner') {
-                setTimeout(() => {
-                    const winnerItem = items.find(i => i.text === text);
-                    if (winnerItem) {
-                        lastWinnerId = winnerItem.id;
-                        const itemNumber = items.indexOf(winnerItem) + 1;
-                        document.getElementById('selectedItem').textContent = `${winnerItem.text}（番号: ${itemNumber}）`;
-                        updateUI();
-                    }
-                }, 0);
-            }
+        const cols = parseCSVLine(line);
+        if (cols.length < 2) return;
+
+        const type = cols[0];
+        const text = cols[1];
+        const val = cols[2];
+        const desc = cols[3] || '';
+
+        if (type === 'Item') {
+            const isActive = parseInt(val) === 1;
+            items.push({ id: idCounter++, text: text, active: isActive, desc: desc });
+        } else if (type === 'History') {
+            const ul = document.getElementById('historyList');
+            const li = document.createElement('li');
+            li.textContent = text;
+            if (desc) li.setAttribute('data-tooltip', desc);
+            ul.appendChild(li);
+        } else if (type === 'Winner') {
+            setTimeout(() => {
+                const winnerItem = items.find(i => i.text === text);
+                if (winnerItem) {
+                    lastWinnerId = winnerItem.id;
+                    const itemNumber = items.indexOf(winnerItem) + 1;
+                    const descHtml = winnerItem.desc ? `<div class="winner-desc">${winnerItem.desc}</div>` : '';
+                    document.getElementById('selectedItem').innerHTML = `<div>${winnerItem.text}（番号: ${itemNumber}）</div>${descHtml}`;
+                    updateUI();
+                }
+            }, 0);
+        } else if (type === 'Title') {
+            document.getElementById('titleInput').value = text;
         }
     });
     updateUI();
@@ -502,15 +728,31 @@ function updateUI() {
     renderRoulette();
 }
 
-function clearList() {
-    if (!items.length) return;
-    if (confirm('項目リストを全て削除しますか？')) {
+function clearAllData() {
+    if (!items.length && !document.getElementById('historyList').children.length) return;
+    if (confirm(TEXT_CONFIG.messages.confirmClear)) {
         items = [];
+        document.getElementById('historyList').innerHTML = '';
+        document.getElementById('selectedItem').innerHTML = '';
+        lastWinnerId = null;
+        idCounter = 0;
+        updateUI();
+    }
+}
+
+function resetStatus() {
+    if (confirm(TEXT_CONFIG.messages.confirmReset)) {
+        document.getElementById('historyList').innerHTML = '';
+        document.getElementById('selectedItem').innerHTML = '';
+        items.forEach(i => i.active = true);
         lastWinnerId = null;
         updateUI();
     }
 }
 
+// ==========================================================================
+// ドラッグ&ドロップ制御 (Drag & Drop Logic)
+// ==========================================================================
 function handleDragStart(e) {
     if(e.target.tagName.toLowerCase() === 'button' || e.target.closest('button')) {
         e.preventDefault(); return;
@@ -520,18 +762,8 @@ function handleDragStart(e) {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', this.innerHTML);
 }
-
-function handleDragOver(e) {
-    if (e.preventDefault) e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    this.classList.add('over');
-    return false;
-}
-
-function handleDragLeave(e) {
-    this.classList.remove('over');
-}
-
+function handleDragOver(e) { if (e.preventDefault) e.preventDefault(); e.dataTransfer.dropEffect = 'move'; this.classList.add('over'); return false; }
+function handleDragLeave(e) { this.classList.remove('over'); }
 function handleDrop(e) {
     if (e.stopPropagation) e.stopPropagation();
     const destEl = this;
@@ -546,15 +778,14 @@ function handleDrop(e) {
     }
     return false;
 }
-
 function handleDragEnd(e) {
     this.classList.remove('dragging');
-    document.querySelectorAll('#list li').forEach(li => {
-        li.classList.remove('over');
-        li.classList.remove('dragging');
-    });
+    document.querySelectorAll('#list li').forEach(li => { li.classList.remove('over'); li.classList.remove('dragging'); });
 }
 
+// ==========================================================================
+// 描画関連 (Rendering)
+// ==========================================================================
 function renderList() {
     const ul = document.getElementById('list');
     ul.innerHTML = '';
@@ -562,7 +793,6 @@ function renderList() {
         const li = document.createElement('li');
         li.dataset.index = index;
         li.setAttribute('draggable', 'true'); 
-        
         li.addEventListener('dragstart', handleDragStart, false);
         li.addEventListener('dragover', handleDragOver, false);
         li.addEventListener('dragleave', handleDragLeave, false);
@@ -573,19 +803,20 @@ function renderList() {
         if (item.id === lastWinnerId) li.classList.add('final-highlight');
 
         const trashBtn = document.createElement('button');
-        trashBtn.className = 'icon-btn tooltip-btn list trash-btn';
-        trashBtn.setAttribute('data-tooltip', '削除');
+        trashBtn.className = 'icon-btn trash-btn';
+        trashBtn.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.trash);
         trashBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
         trashBtn.onclick = () => { items.splice(index, 1); updateUI(); };
 
         const span = document.createElement('span');
         span.className = 'item-text';
         span.textContent = `${index + 1}. ${item.text}`;
+        if (item.desc) span.setAttribute('data-tooltip', item.desc);
 
         const toggleBtn = document.createElement('button');
-        toggleBtn.className = 'icon-btn tooltip-btn list';
+        toggleBtn.className = 'icon-btn toggle-btn';
         toggleBtn.textContent = item.active ? '✕' : '♻';
-        toggleBtn.setAttribute('data-tooltip', item.active ? '外す' : '戻す');
+        toggleBtn.setAttribute('data-tooltip', item.active ? TEXT_CONFIG.tooltips.remove : TEXT_CONFIG.tooltips.restore);
         toggleBtn.onclick = () => { item.active = !item.active; updateUI(); };
 
         li.append(trashBtn, span, toggleBtn);
@@ -598,8 +829,8 @@ function renderRoulette() {
     const isDark = document.body.classList.contains('dark');
     const startColor = isDark ? 200 : 250;
     const endColor = isDark ? 40 : 100;
-
     const activeList = items.filter(i => i.active);
+
     if (!activeList.length) {
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         const radialGradient = document.createElementNS('http://www.w3.org/2000/svg', 'radialGradient');
@@ -613,19 +844,16 @@ function renderRoulette() {
 
     svg.innerHTML = '';
     const segmentAngle = 360 / activeList.length;
-
     activeList.forEach((item, i) => {
         const ratio = activeList.length > 1 ? i / (activeList.length) : 0;
         const gray = Math.round(startColor - (startColor - endColor) * ratio);
         const color = `rgb(${gray},${gray},${gray})`;
-
         const startA = segmentAngle * i;
         const endA = startA + segmentAngle; 
         const x1 = 200 + 190 * Math.cos(Math.PI * startA / 180);
         const y1 = 200 + 190 * Math.sin(Math.PI * startA / 180);
         const x2 = 200 + 190 * Math.cos(Math.PI * endA / 180);
         const y2 = 200 + 190 * Math.sin(Math.PI * endA / 180);
-
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', `M200,200 L${x1},${y1} A190,190 0 ${segmentAngle > 180 ? 1 : 0} 1 ${x2},${y2} Z`);
         path.setAttribute('fill', color);
@@ -644,57 +872,155 @@ function renderRoulette() {
     svg.appendChild(borderCircle);
 }
 
-function startRoulette(removeAfter) {
+// ==========================================================================
+// ルーレット回転ロジック (Core Logic)
+// ==========================================================================
+async function startRoulette(removeAfter) {
+    if (isSpinning) return;
+
+    let count = parseInt(document.getElementById('spinCountInput').value);
+    if (isNaN(count) || count < 1) count = 1;
+
     const activeList = items.filter(i => i.active);
-    if (!activeList.length) return alert('抽選対象がありません！');
+    if (!activeList.length) return alert(TEXT_CONFIG.messages.noItem);
 
-    const randomIndex = Math.floor(Math.random() * activeList.length);
-    const winner = activeList[randomIndex];
-    
-    const segmentAngle = 360 / activeList.length;
-    const targetAngle = (11 * 360) + (segmentAngle * randomIndex) + (segmentAngle / 2);
-    const duration = 3000;
-    const startTime = performance.now();
+    isSpinning = true;
+    lastModeRemove = removeAfter;
 
-    function animate(time) {
-        const t = Math.min((time - startTime) / duration, 1);
-        const progress = 1 - Math.pow(1 - t, 3);
-        angle = targetAngle * progress;
-        document.getElementById('roulette').style.transform = `rotate(${angle}deg)`;
-        
-        const currentIndex = Math.floor(((angle % 360 + 360) % 360) / segmentAngle) % activeList.length;
-        const currentItem = activeList[currentIndex];
-        
-        document.querySelectorAll('#list li').forEach((li, idx) => {
-            li.classList.toggle('highlight', items[idx].id === currentItem.id);
+    if (isFastMode) {
+        // --- 高速処理モード ---
+        const results = [];
+        for (let i = 0; i < count; i++) {
+            const activeList = items.filter(item => item.active);
+            if (activeList.length === 0) break;
+            
+            const randomIndex = Math.floor(Math.random() * activeList.length);
+            const winner = activeList[randomIndex];
+            
+            results.push({
+                text: winner.text,
+                originalIndex: items.findIndex(it => it.id === winner.id) + 1,
+                desc: winner.desc,
+                id: winner.id
+            });
+
+            if (removeAfter) {
+                const targetItem = items.find(it => it.id === winner.id);
+                if(targetItem) targetItem.active = false;
+            }
+        }
+
+        if (results.length === 0) {
+            isSpinning = false;
+            return alert(TEXT_CONFIG.messages.noItem);
+        }
+
+        // 簡易回転アニメーション
+        await new Promise(resolve => {
+            const duration = 2000;
+            const startTime = performance.now();
+            const baseRotations = 10;
+            const targetAngle = angle + 360 * baseRotations + Math.random() * 360; 
+            const startAngle = angle;
+
+            function animate(time) {
+                const t = Math.min((time - startTime) / duration, 1);
+                const progress = 1 - Math.pow(1 - t, 3);
+                angle = startAngle + (targetAngle - startAngle) * progress;
+                document.getElementById('roulette').style.transform = `rotate(${angle}deg)`;
+                if (t < 1) requestAnimationFrame(animate);
+                else resolve();
+            }
+            requestAnimationFrame(animate);
         });
 
-        if (t < 1) {
-            requestAnimationFrame(animate);
-        } else {
-            const originalIndex = items.findIndex(i => i.id === winner.id);
-            document.getElementById('selectedItem').textContent = `${winner.text}（番号: ${originalIndex + 1}）`;
-            addHistory(`${winner.text}（番号: ${originalIndex + 1}）`);
-            lastWinnerId = winner.id;
-            if (removeAfter) winner.active = false;
-            updateUI();
+        results.forEach(res => {
+            addHistory(res.text, res.originalIndex, res.desc);
+        });
+        
+        const lastRes = results[results.length - 1];
+        const descHtml = lastRes.desc ? `<div class="winner-desc">${lastRes.desc}</div>` : '';
+        document.getElementById('selectedItem').innerHTML = `<div>${lastRes.text}（番号: ${lastRes.originalIndex}）</div>${descHtml}`;
+        lastWinnerId = lastRes.id;
+        
+        updateUI();
+        isSpinning = false;
+
+    } else {
+        // --- 通常モード ---
+        for (let i = 0; i < count; i++) {
+            const currentActive = items.filter(item => item.active);
+            if (currentActive.length === 0) {
+                alert(TEXT_CONFIG.messages.outOfStock);
+                break;
+            }
+            await spinOnce(currentActive, removeAfter);
+            if (i < count - 1) await new Promise(r => setTimeout(r, 800));
         }
+        isSpinning = false;
     }
-    requestAnimationFrame(animate);
 }
 
-function addHistory(text) {
+function spinOnce(activeList, removeAfter) {
+    return new Promise(resolve => {
+        const randomIndex = Math.floor(Math.random() * activeList.length);
+        const winner = activeList[randomIndex];
+        const segmentAngle = 360 / activeList.length;
+        
+        const baseRotations = 5 + Math.floor(Math.random() * 5); 
+        const targetAngle = (baseRotations * 360) + (segmentAngle * randomIndex) + (segmentAngle / 2);
+        
+        const duration = 2500;
+        const startTime = performance.now();
+
+        const currentRotation = angle % 360; 
+        const additionalRotation = (targetAngle - currentRotation) + 360 * 3;
+        const finalAngle = angle + additionalRotation;
+
+        function animate(time) {
+            const t = Math.min((time - startTime) / duration, 1);
+            const progress = 1 - Math.pow(1 - t, 3);
+            
+            const currentAnimAngle = angle + (finalAngle - angle) * progress;
+            document.getElementById('roulette').style.transform = `rotate(${currentAnimAngle}deg)`;
+            
+            const normalizedAngle = (currentAnimAngle % 360 + 360) % 360;
+            const currentIndex = Math.floor(normalizedAngle / segmentAngle) % activeList.length;
+            const currentItem = activeList[currentIndex];
+            
+            document.querySelectorAll('#list li').forEach((li, idx) => {
+                const isMatch = items[idx].id === currentItem.id;
+                li.classList.toggle('highlight', isMatch);
+            });
+
+            if (t < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                angle = finalAngle;
+                const originalIndex = items.findIndex(i => i.id === winner.id);
+                
+                const descHtml = winner.desc ? `<div class="winner-desc">${winner.desc}</div>` : '';
+                document.getElementById('selectedItem').innerHTML = `<div>${winner.text}（番号: ${originalIndex + 1}）</div>${descHtml}`;
+                
+                addHistory(winner.text, originalIndex + 1, winner.desc);
+                lastWinnerId = winner.id;
+                
+                if (removeAfter) winner.active = false;
+                updateUI();
+                
+                resolve();
+            }
+        }
+        requestAnimationFrame(animate);
+    });
+}
+
+function addHistory(text, index, desc = '') {
     const ul = document.getElementById('historyList');
     const li = document.createElement('li');
-    li.textContent = `${text} (${new Date().toLocaleTimeString()})`;
+    li.textContent = `${text}（番号: ${index}） (${new Date().toLocaleTimeString()})`;
+    if (desc) li.setAttribute('data-tooltip', desc);
     ul.insertBefore(li, ul.firstChild);
-}
-
-function clearHistory() {
-    document.getElementById('historyList').innerHTML = '';
-    items.forEach(i => i.active = true);
-    lastWinnerId = null;
-    updateUI();
 }
 </script>
 </body>
