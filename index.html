@@ -389,16 +389,26 @@
         opacity: 1; transform: translateX(-50%) translateY(0);
     }
 
-    #darkModeBtn {
-        position: fixed; top: 15px; right: 15px; 
+    /* --- 右上固定ボタン群 --- */
+    .fixed-btn {
+        position: fixed; top: 15px;
         background: var(--card-bg); border: 1px solid var(--border-color);
         border-radius: 50%; cursor: pointer;
         width: 44px; height: 44px; z-index: 9999;
         transition: opacity 0.3s; padding: 10px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: var(--text-color);
+        box-sizing: border-box;
     }
-    #darkModeBtn:hover { transform: scale(1.05); }
-    #darkModeBtn svg { fill: currentColor; width: 100%; height: 100%; }
+    .fixed-btn:hover { transform: scale(1.05); }
+    .fixed-btn svg { fill: currentColor; width: 100%; height: 100%; }
+
+    #darkModeBtn { right: 15px; }
+    #muteBtn { right: 70px; } /* ダークモードボタンの左隣 */
+    
+    #muteBtn.muted svg path.sound-wave { display: none; }
+    #muteBtn.muted svg path.mute-x { display: block; }
+    #muteBtn:not(.muted) svg path.mute-x { display: none; }
+    #muteBtn.muted .mute-x { display: block; } /* グループ用 */
 
     @media (max-width: 900px) {
         .container { flex-direction: column; align-items: center; gap: 30px; }
@@ -412,7 +422,19 @@
 </head>
 <body class="dark">
 
-<button id="darkModeBtn" title="ダークモード切替">
+<!-- デフォルトミュート状態 (.muted クラス付与) -->
+<button id="muteBtn" class="fixed-btn muted" title="ミュート解除" data-tooltip="効果音のオン/オフ">
+    <svg viewBox="0 0 24 24">
+        <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+        <path class="sound-wave" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        <!-- ミュート時のバツ印 -->
+        <g class="mute-x" style="display:none">
+             <path d="M16 16l4-4m0 0l-4-4m4 4l-4 4m4-4l-4-4" stroke="currentColor" stroke-width="2" />
+        </g>
+    </svg>
+</button>
+
+<button id="darkModeBtn" class="fixed-btn" title="ダークモード切替">
     <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c4.97 0 9-4.03 9-9a9 9 0 0 0-9-9z"/></svg>
 </button>
 
@@ -520,7 +542,8 @@ const TEXT_CONFIG = {
         reset: "抽選開始前に戻す",
         trash: "削除",
         remove: "外す",
-        restore: "戻す"
+        restore: "戻す",
+        mute: "効果音のオン/オフ"
     },
     messages: {
         noItem: "抽選対象がありません。",
@@ -539,6 +562,74 @@ const TEXT_CONFIG = {
     ]
 };
 
+// --- サウンド管理オブジェクト ---
+const SoundManager = {
+    ctx: null,
+    isMuted: true, // デフォルトでミュート
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    },
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        const btn = document.getElementById('muteBtn');
+        if (this.isMuted) {
+            btn.classList.add('muted');
+            btn.setAttribute('title', 'ミュート解除');
+        } else {
+            btn.classList.remove('muted');
+            btn.setAttribute('title', 'ミュートする');
+            // 解除時に短く鳴らして確認
+            this.init();
+            this.playClick();
+        }
+    },
+    // 回転中の「カカカ」音（音量を0.05→0.025へ半減）
+    playClick() {
+        if (this.isMuted || !this.ctx) return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, t);
+        
+        // 音量調整: 0.025 に設定
+        gain.gain.setValueAtTime(0.025, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        
+        osc.start(t);
+        osc.stop(t + 0.05);
+    },
+    // 停止時の「チ～ン」音
+    playBell() {
+        if (this.isMuted || !this.ctx) return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        
+        osc.type = 'sine'; 
+        osc.frequency.setValueAtTime(2000, t); 
+        
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5); 
+        
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        
+        osc.start(t);
+        osc.stop(t + 1.5);
+    }
+};
+
 let items = []; 
 let idCounter = 0;
 let angle = 0;
@@ -550,18 +641,18 @@ let isSpinning = false;
 let isFastMode = false;
 
 document.addEventListener('DOMContentLoaded', () => { 
-    // 共有URLパラメータのチェックと復元
     restoreFromShareURL();
-
     applyUIStrings(); 
-    // リストのレンダリングはrestoreFromShareURLまたはaddItem等で行われるが、
-    // 初期状態が空の場合はここでルーレット（空の円）を描画する
     if(items.length === 0) renderRoulette();
-    
     initTooltip(); 
+    
     document.querySelector('.roulette-wrapper').addEventListener('click', () => {
         startRoulette(lastModeRemove);
     });
+});
+
+document.getElementById('muteBtn').addEventListener('click', () => {
+    SoundManager.toggleMute();
 });
 
 function applyUIStrings() {
@@ -588,6 +679,7 @@ function applyUIStrings() {
     document.getElementById('dropZone').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.dropZone);
     document.getElementById('btnExport').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.export);
     document.getElementById('btnShare').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.share);
+    document.getElementById('muteBtn').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.mute);
 }
 
 document.getElementById('darkModeBtn').addEventListener('click', () => {
@@ -628,11 +720,7 @@ function initTooltip() {
     });
 }
 
-/**
- * トースト通知を表示する
- */
 function showToast(message) {
-    // 既存のトーストがあれば削除
     const existing = document.querySelector('.toast-notification');
     if (existing) existing.remove();
 
@@ -641,12 +729,10 @@ function showToast(message) {
     toast.textContent = message;
     document.body.appendChild(toast);
 
-    // アニメーション用クラス付与
     requestAnimationFrame(() => {
         toast.classList.add('show');
     });
 
-    // 2秒後に消す
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
@@ -746,94 +832,51 @@ function exportCSV() {
     URL.revokeObjectURL(url);
 }
 
-// ---------------------------------------------------------
-// シェア & URL復元機能
-// ---------------------------------------------------------
-
-/**
- * 現在の状態（タイトルとリスト）をURLパラメータに変換してクリップボードにコピーする
- */
 async function shareCurrentState() {
     if (items.length === 0) {
         alert(TEXT_CONFIG.messages.noItem);
         return;
     }
-
     const title = document.getElementById('titleInput').value;
     const saveData = {
         t: title,
         i: items.map(item => ({ t: item.text, a: item.active ? 1 : 0, d: item.desc }))
     };
-
     try {
-        // 日本語を含むJSONをBase64にエンコード
         const jsonStr = JSON.stringify(saveData);
         const base64Params = btoa(unescape(encodeURIComponent(jsonStr)));
-        
-        // URL構築
         const url = new URL(window.location.href);
         url.searchParams.set('data', base64Params);
-        const shareUrl = url.toString();
-
-        // クリップボードへコピー
-        await navigator.clipboard.writeText(shareUrl);
-        
-        // トースト通知を表示（alert廃止）
+        await navigator.clipboard.writeText(url.toString());
         showToast(TEXT_CONFIG.messages.shareSuccess);
-
     } catch (e) {
         console.error(e);
-        // エラー時はユーザーに知らせるため、ここだけはトーストかアラートで
         showToast(TEXT_CONFIG.messages.shareError);
     }
 }
 
-/**
- * URLパラメータ 'data' があればリストを復元する
- */
 function restoreFromShareURL() {
     const params = new URLSearchParams(window.location.search);
     const data = params.get('data');
     if (!data) return;
-
     try {
-        // Base64デコード（URLパラメータで+がスペースになる問題への対処を含む）
         const base64Str = data.replace(/ /g, '+');
         const jsonStr = decodeURIComponent(escape(atob(base64Str)));
         const savedData = JSON.parse(jsonStr);
-
-        if (savedData.t) {
-            document.getElementById('titleInput').value = savedData.t;
-        }
-
+        if (savedData.t) document.getElementById('titleInput').value = savedData.t;
         if (Array.isArray(savedData.i)) {
             items = [];
             idCounter = 0;
             savedData.i.forEach(item => {
-                items.push({
-                    id: idCounter++,
-                    text: item.t,
-                    active: item.a === 1,
-                    desc: item.d || ''
-                });
+                items.push({ id: idCounter++, text: item.t, active: item.a === 1, desc: item.d || '' });
             });
-            
-            // 履歴と結果表示はクリア
             document.getElementById('historyList').innerHTML = '';
             document.getElementById('selectedItem').innerHTML = '';
-            
-            // ページ遷移でのリロード時にパラメータを消す（クリーンなURLに戻す）
             window.history.replaceState(null, '', window.location.pathname);
-            
-            // UIを更新してリストを表示させる
             updateUI();
         }
-    } catch (e) {
-        console.error("Failed to restore from URL", e);
-    }
+    } catch (e) { console.error("Failed to restore from URL", e); }
 }
-
-// ---------------------------------------------------------
 
 function parseCSVLine(line) {
     const result = [];
@@ -842,16 +885,10 @@ function parseCSVLine(line) {
     for (let i = 0; i < line.length; i++) {
         const char = line[i];
         if (char === '"') {
-            if (inQuote && line[i + 1] === '"') {
-                current += '"'; i++;
-            } else {
-                inQuote = !inQuote;
-            }
+            if (inQuote && line[i + 1] === '"') { current += '"'; i++; } else { inQuote = !inQuote; }
         } else if (char === ',' && !inQuote) {
             result.push(current); current = '';
-        } else {
-            current += char;
-        }
+        } else { current += char; }
     }
     result.push(current);
     return result;
@@ -972,7 +1009,6 @@ function renderList() {
         li.addEventListener('drop', handleDrop, false);
         li.addEventListener('dragend', handleDragEnd, false);
 
-        // 今回のセッションで当選した項目は、active状態に関わらずハイライトを優先
         if (currentSessionWinners.includes(item.id)) {
             li.classList.add('final-highlight');
         } else if (!item.active) {
@@ -1075,6 +1111,9 @@ function renderRoulette() {
 
 async function startRoulette(removeAfter) {
     if (isSpinning) return;
+    
+    // サウンドの初期化(ユーザーアクション起因)
+    SoundManager.init();
 
     let count = parseInt(document.getElementById('spinCountInput').value);
     if (isNaN(count) || count < 1) count = 1;
@@ -1085,10 +1124,9 @@ async function startRoulette(removeAfter) {
     isSpinning = true;
     lastModeRemove = removeAfter;
     
-    // リセット：STARTボタンを押した瞬間にハイライトを消去し、UIを更新
     currentSessionWinners = []; 
     lastWinnerId = null;
-    document.getElementById('selectedItem').innerHTML = ''; // 結果表示クリア
+    document.getElementById('selectedItem').innerHTML = ''; 
     updateUI();
 
     if (isFastMode) {
@@ -1118,22 +1156,35 @@ async function startRoulette(removeAfter) {
             const startTime = performance.now();
             const startAngle = angle;
             const targetAngle = angle + 360 * 10 + Math.random() * 360; 
+            
+            // 高速モード時のサウンド間隔制御
+            let lastSoundTime = 0;
+
             function animate(time) {
                 const t = Math.min((time - startTime) / duration, 1);
                 const progress = 1 - Math.pow(1 - t, 3);
                 angle = startAngle + (targetAngle - startAngle) * progress;
                 document.getElementById('roulette').style.transform = `rotate(${angle}deg)`;
+                
+                // 高速回転中の音（少し間引く）
+                if (time - lastSoundTime > 80 && t < 0.95) {
+                    SoundManager.playClick();
+                    lastSoundTime = time;
+                }
+
                 if (t < 1) requestAnimationFrame(animate);
                 else resolve();
             }
             requestAnimationFrame(animate);
         });
+        
+        // 終了時サウンド
+        SoundManager.playBell();
 
         results.forEach(res => {
             addHistory(res.text, res.originalIndex, res.desc);
         });
         
-        // 高速モード時は「最後の当選者ID」は設定しない（リストで全て光らせるため）
         lastWinnerId = null;
         updateUI(); 
         isSpinning = false;
@@ -1166,18 +1217,28 @@ function spinOnce(activeList, removeAfter) {
         const duration = 2500;
         const startTime = performance.now();
 
+        // 効果音トリガー用変数
+        let lastSegmentIndex = -1;
+
         function animate(time) {
             const t = Math.min((time - startTime) / duration, 1);
             const progress = 1 - Math.pow(1 - t, 3);
             const currentAnimAngle = angle + (finalAngle - angle) * progress;
             document.getElementById('roulette').style.transform = `rotate(${currentAnimAngle}deg)`;
             
-            // 回転中のリストハイライト同期
+            // --- サウンド判定ロジック ---
             const normalizedAngle = currentAnimAngle % 360;
-            const effectiveAngle = (360 - normalizedAngle) % 360;
-            const currentIndex = Math.floor(effectiveAngle / segmentAngle) % activeList.length;
-            const currentItem = activeList[currentIndex];
+            const effectiveAngle = (360 - normalizedAngle) % 360; 
+            const currentSegment = Math.floor(effectiveAngle / segmentAngle) % activeList.length;
             
+            if (currentSegment !== lastSegmentIndex && t < 1) {
+                SoundManager.playClick();
+                lastSegmentIndex = currentSegment;
+            }
+            // ---------------------------
+
+            // 回転中のリストハイライト同期
+            const currentItem = activeList[currentSegment];
             if (currentItem) {
                 document.querySelectorAll('#list li').forEach((li, idx) => {
                     const isMatch = items[idx].id === currentItem.id;
@@ -1191,6 +1252,9 @@ function spinOnce(activeList, removeAfter) {
                 requestAnimationFrame(animate);
             } else {
                 angle = finalAngle;
+                // 終了時サウンド
+                SoundManager.playBell();
+
                 const originalIndex = items.findIndex(i => i.id === winner.id);
                 const descHtml = winner.desc ? `<div class="winner-desc">${winner.desc}</div>` : '';
                 document.getElementById('selectedItem').innerHTML = `<div>${winner.text}（番号: ${originalIndex + 1}）</div>${descHtml}`;
@@ -1200,7 +1264,7 @@ function spinOnce(activeList, removeAfter) {
                 currentSessionWinners.push(winner.id);
                 
                 if (removeAfter) winner.active = false;
-                updateUI(); // ここでハイライト確定（inactiveにはしない）
+                updateUI();
                 
                 resolve();
             }
