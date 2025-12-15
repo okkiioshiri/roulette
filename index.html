@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!-- スマホ対応のためのビューポート設定を追加 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>stylish roulette</title>
 <style>
     /* ==========================================================================
@@ -41,7 +43,10 @@
         flex-direction: column;
         align-items: center;
         padding: 20px;
+        margin: 0; /* マージンリセット */
         transition: background 0.3s, color 0.3s;
+        min-height: 100vh;
+        box-sizing: border-box;
     }
     .container {
         display: flex;
@@ -49,17 +54,17 @@
         align-items: flex-start;
         width: 100%;
         max-width: 1200px;
-        gap: 10px;
+        gap: 15px; /* 間隔を少し調整 */
     }
     .main {
         text-align: center;
-        margin: 0 5px;
         position: relative;
         flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
         min-width: 0;
+        width: 100%; /* モバイル用に幅確保 */
     }
 
     /* ==========================================================================
@@ -72,10 +77,10 @@
         border-radius: 6px;
         padding: 10px;
         font-size: 16px;
-        margin: 10px 0;
+        /* margin削除しgapで制御 */
         display: flex;
         flex-direction: column;
-        max-height: calc(100vh - 40px);
+        max-height: calc(100vh - 40px); /* PC用高さ制限 */
         transition: background 0.3s, border-color 0.3s;
         box-shadow: 0 2px 8px var(--shadow-color);
         box-sizing: border-box;
@@ -89,8 +94,9 @@
         flex: 1;
         overflow-y: auto;
         overflow-x: hidden;
-        min-height: 0;
+        min-height: 150px; /* 空でも高さを確保 */
     }
+    /* スクロールバー装飾 */
     #itemList::-webkit-scrollbar, #history::-webkit-scrollbar,
     #list::-webkit-scrollbar, #historyList::-webkit-scrollbar {
         width: 6px;
@@ -100,17 +106,19 @@
         background: var(--border-color);
         border-radius: 4px;
     }
+    
     #itemList h2, #history h2 {
         text-align: center;
         margin-bottom: 10px;
         padding-bottom: 8px;
         border-bottom: 2px solid var(--border-color);
         flex-shrink: 0;
+        font-size: 1.2rem;
     }
 
     /* リストアイテム */
     #itemList li, #historyList li {
-        padding: 6px 0;
+        padding: 8px 0; /* タップしやすいように少し広げる */
         border-bottom: 1px solid var(--border-color);
         display: flex;
         align-items: center;
@@ -150,50 +158,61 @@
        ========================================================================== */
     .title-wrapper {
         position: relative;
-        margin: 0 auto 20px auto;
-        width: fit-content;
-        min-width: 200px;
+        margin: 0 auto 15px auto;
+        width: 100%;
+        max-width: 400px;
     }
     #titleInput {
-        font-size: 32px; font-weight: 700; text-align: center;
+        font-size: clamp(24px, 5vw, 32px); /* 画面幅に応じてフォントサイズ調整 */
+        font-weight: 700; text-align: center;
         border: none; border-bottom: 2px solid transparent;
         background: transparent; color: var(--text-color);
-        outline: none; width: 100%; padding: 5px 10px;
+        outline: none; width: 100%; padding: 5px 0;
         transition: all 0.3s ease; letter-spacing: 1.5px;
         font-family: inherit;
+        box-sizing: border-box;
     }
     #titleInput:hover, #titleInput:focus {
         border-bottom-color: var(--accent-color);
-        letter-spacing: 2.5px;
+        letter-spacing: 2px;
     }
     #titleInput::placeholder { color: var(--border-color); font-weight: normal; }
 
     #selectedItem {
-        font-size: 24px; font-weight: bold; margin: 20px 0; min-height: 50px;
+        font-size: clamp(18px, 4vw, 24px);
+        font-weight: bold; margin: 10px 0 20px 0; min-height: 50px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         width: 100%;
     }
     .winner-desc {
-        font-size: 15px; color: var(--text-color); opacity: 0.7;
+        font-size: 14px; color: var(--text-color); opacity: 0.7;
         margin-top: 4px; font-weight: normal; letter-spacing: 0.05em;
         white-space: pre-wrap; word-break: break-word; 
-        max-width: 480px; 
-        width: 95%; 
+        max-width: 480px; width: 95%; 
         padding: 0 10px; box-sizing: border-box;
     }
+
+    /* ルーレット本体：レスポンシブ対応 */
     .roulette-wrapper {
-        position: relative; width: 400px; height: 400px; margin: 0 auto;
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        aspect-ratio: 1 / 1; /* 正方形を維持 */
+        height: auto; /* 固定値を解除 */
+        margin: 0 auto;
         border-radius: 50%; box-shadow: 0 10px 25px var(--shadow-color);
         flex-shrink: 0; cursor: pointer; transition: transform 0.1s;
     }
     .roulette-wrapper:active { transform: scale(0.98); }
     .roulette-wrapper::after {
         content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 40px; height: 40px; background: var(--card-bg); border: 4px solid var(--text-color);
+        width: 10%; height: 10%; /* ％指定に変更 */
+        background: var(--card-bg); border: 4px solid var(--text-color);
         border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; pointer-events: none;
     }
     #roulette {
-        width: 400px; height: 400px; transform: rotate(0deg); filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
+        width: 100%; height: 100%; /* 親要素に追従 */
+        transform: rotate(0deg); filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
     }
     .pointer {
         position: absolute; top: 50%; left: 100%; transform: translate(-55%, -50%) rotate(270deg);
@@ -205,16 +224,19 @@
        5. コントロールエリア (Controls)
        ========================================================================== */
     .controls {
-        display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px; width: 100%;
-        margin-bottom: 10px;
+        display: flex; flex-direction: column; align-items: center; gap: 12px;
+        margin-top: 20px; width: 100%;
+        max-width: 500px; /* 広がりすぎ防止 */
     }
     .input-group, .action-group, .file-group, .setting-group {
-        display: flex; justify-content: center; gap: 10px; width: 100%; max-width: 480px;
+        display: flex; justify-content: center; gap: 8px; width: 100%;
         position: relative; z-index: 5;
+        flex-wrap: wrap; /* スマホで折り返し許可 */
     }
     .action-group + .action-group { margin-top: -5px; }
+    
     .file-area {
-        display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; gap: 5px;
+        display: flex; flex-direction: column; align-items: center; width: 100%; gap: 5px;
         position: relative; z-index: 6;
     }
 
@@ -229,10 +251,11 @@
     .spin-label { font-size: 13px; color: var(--text-color); font-weight: 500; }
     
     #spinCountInput {
-        width: 50px; height: 28px; text-align: center;
+        width: 50px; height: 32px; text-align: center;
         background: var(--card-bg); color: var(--text-color);
         border: 1px solid var(--border-color); border-radius: 4px;
-        font-size: 14px; -moz-appearance: textfield; 
+        font-size: 16px; /* ズーム防止 */
+        -moz-appearance: textfield; 
     }
     #spinCountInput::-webkit-outer-spin-button,
     #spinCountInput::-webkit-inner-spin-button {
@@ -244,27 +267,27 @@
         filter: drop-shadow(0 0 3px var(--accent-color)); font-weight: bold;
     }
     #fastModeBtn {
-        width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;
+        width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;
     }
 
     .input-group input[type="text"], .file-input-wrapper, button, .custom-file-btn { 
-        height: 40px; box-sizing: border-box; 
+        height: 44px; /* スマホ操作に適した高さ */
+        box-sizing: border-box; 
     }
     .input-group input[type="text"] {
         flex: 1; padding: 0 10px; font-size: 16px;
         background: var(--card-bg); color: var(--text-color);
-        border: 1px solid var(--border-color); border-radius: 4px; line-height: 38px;
+        border: 1px solid var(--border-color); border-radius: 4px;
+        min-width: 150px; /* 入力欄が潰れないように */
     }
 
     .file-input-wrapper {
         flex: 1; position: relative; display: flex; align-items: center; justify-content: stretch;
-        cursor: pointer;
+        cursor: pointer; min-width: 120px;
     }
-    #fileInput { 
-        display: none;
-    }
+    #fileInput { display: none; }
     .custom-file-btn { 
-        width: 100%; height: 100%; z-index: 1; pointer-events: none; 
+        width: 100%; height: 100%; z-index: 1; pointer-events: none; display: flex; align-items: center; justify-content: center;
     }
     .file-input-wrapper.dragover .custom-file-btn {
         background: var(--accent-color); color: white;
@@ -277,20 +300,24 @@
         transition: background 0.3s, transform 0.2s, opacity 0.3s;
         position: relative; display: inline-flex; align-items: center; justify-content: center;
         font-size: 16px; opacity: 0.8; z-index: 20;
+        touch-action: manipulation; /* タップの遅延を防止 */
     }
     button:hover, .custom-file-btn:hover { opacity: 1; }
+    button:active, .custom-file-btn:active { transform: scale(0.96); }
     button.clear-btn:hover { background-color: var(--danger-color); color: white; opacity: 1; }
     
     .input-group button, .file-group button.icon-only { width: 60px; padding: 0; flex: 0 0 60px; }
-    .action-group button { flex: 1; white-space: nowrap; padding: 0 10px; }
-    button.icon-only svg { width: 22px; height: 22px; fill: currentColor; }
+    .action-group button { flex: 1; white-space: nowrap; padding: 0 10px; min-width: 120px; }
+    button.icon-only svg { width: 24px; height: 24px; fill: currentColor; }
     
     #fileNameDisplay {
         font-size: 13px; color: var(--text-color); opacity: 0.8;
         height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
     }
+    
     .icon-btn {
-        background: none; border: none; padding: 4px; font-size: 18px; color: var(--text-color); opacity: 0.8; height: auto;
+        background: none; border: none; padding: 8px; /* タップ領域確保 */
+        font-size: 18px; color: var(--text-color); opacity: 0.8; height: auto;
     }
     .icon-btn:hover { color: var(--accent-color); opacity: 1; }
     .icon-btn.trash-btn:hover { color: var(--danger-color); }
@@ -307,13 +334,55 @@
     }
 
     #darkModeBtn {
-        position: fixed; top: 15px; right: 15px; 
-        background: none; border: none; cursor: pointer;
-        width: 32px; height: 32px; opacity: 0.4; z-index: 9999;
+        position: fixed; top: 10px; right: 10px; 
+        background: rgba(128,128,128,0.2); border-radius: 50%;
+        border: none; cursor: pointer;
+        width: 40px; height: 40px; opacity: 0.8; z-index: 9999;
         transition: opacity 0.3s;
+        padding: 8px;
     }
-    #darkModeBtn:hover { opacity: 1; }
+    #darkModeBtn:hover { opacity: 1; background: rgba(128,128,128,0.4); }
     #darkModeBtn svg { fill: var(--text-color); width: 100%; height: 100%; }
+
+    /* ==========================================================================
+       7. レスポンシブ対応 (Responsive Design)
+       ========================================================================== */
+    @media (max-width: 900px) {
+        .container {
+            flex-direction: column; /* 縦並びに変更 */
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* 順序変更: 1.ルーレット操作(main) 2.リスト 3.履歴 */
+        .main {
+            order: 1;
+            width: 100%;
+            margin: 0;
+        }
+        #itemList {
+            order: 2;
+            width: 100%;
+            max-width: 600px;
+            max-height: 300px; /* スマホでは高さを制限 */
+        }
+        #history {
+            order: 3;
+            width: 100%;
+            max-width: 600px;
+            max-height: 250px;
+        }
+
+        /* タイトルなどの余白調整 */
+        .title-wrapper { margin-bottom: 10px; }
+        #selectedItem { margin: 5px 0 15px 0; min-height: 40px; }
+        
+        /* ポインタ位置の微調整（縮小対応） */
+        .pointer {
+            transform: translate(-50%, -50%) rotate(270deg); /* ずれ防止 */
+            left: 102%; /* 少し近づける */
+        }
+    }
 </style>
 </head>
 <body class="dark">
@@ -403,7 +472,6 @@
 <script>
 // ==========================================================================
 // 画面内テキストの一元管理 (TEXT CONFIG)
-// （HTML内のテキストよりもこちらの項目が優先される。）
 // ==========================================================================
 const TEXT_CONFIG = {
     titles: {
@@ -536,6 +604,7 @@ function initTooltip() {
     tooltip.id = 'global-tooltip';
     document.body.appendChild(tooltip);
 
+    // PC向け: マウスホバー
     document.addEventListener('mouseover', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (target) {
@@ -556,8 +625,11 @@ function initTooltip() {
             const offset = 15;
             let left = e.clientX + offset;
             let top = e.clientY + offset;
+            // 画面端の処理
             if (left + tooltip.offsetWidth > window.innerWidth) left = e.clientX - tooltip.offsetWidth - offset;
             if (top + tooltip.offsetHeight > window.innerHeight) top = e.clientY - tooltip.offsetHeight - offset;
+            
+            // スマホでの誤表示防止
             tooltip.style.left = `${left}px`;
             tooltip.style.top = `${top}px`;
         }
