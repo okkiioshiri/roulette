@@ -2,48 +2,77 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<!-- スマホ対応のためのビューポート設定を追加 -->
+<!-- スマホ対応: ビューポート設定 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>stylish roulette</title>
 <style>
     /* ==========================================================================
-       1. デザイン設定・変数 (Theme & Variables)
+       1. デザイン変数 (Color Theme)
        ========================================================================== */
     :root {
-        --bg-color: #f9f9f9;
-        --text-color: #333;
-        --card-bg: #fff;
-        --border-color: #ccc;
-        --highlight-color: #ddd;
-        --accent-color: #007aff;
-        --danger-color: #ff3b30;
-        --shadow-color: rgba(0, 0, 0, 0.15);
-        --tooltip-bg: rgba(51, 51, 51, 0.95);
+        /* ライトモード定義 */
+        --bg-color: #f2f2f7;           /* 背景: ライトグレー */
+        --card-bg: #ffffff;            /* カード: 白 */
+        --text-color: #1c1c1e;         /* 文字: 黒 */
+        
+        --input-bg: #e5e5ea;           /* 入力欄: 背景より少し濃く（凹み表現） */
+        --input-border: #d1d1d6;       /* 枠線 */
+
+        --btn-primary-bg: #1c1c1e;     /* ボタン: 黒（高コントラスト） */
+        --btn-primary-text: #ffffff;
+
+        --border-color: #d1d1d6;
+        --highlight-color: #e5e5ea;    /* リストハイライト */
+        --accent-color: #8e8e93;       /* フォーカス時アクセント */
+        
+        --final-bg: #3a3a3c;           /* 決定時の背景 */
+        --final-text: #f2f2f7;         /* 決定時の文字 */
+        --danger-color: #ff3b30;       /* 警告色 */
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        
+        --lightning-color: #007aff;    /* 高速モード（青） */
+        --tooltip-bg: rgba(40, 40, 40, 0.95);
+        --tooltip-text: #ffffff;
     }
+
     body.dark {
-        --bg-color: #1e1e1e;
-        --text-color: #f9f9f9;
-        --card-bg: #2c2c2c;
-        --border-color: #555;
-        --highlight-color: #444;
-        --accent-color: #4da3ff;
+        /* ダークモード定義 */
+        --bg-color: #1c1c1e;           /* 背景: 黒に近いグレー */
+        --card-bg: #2c2c2e;            /* カード: ダークグレー */
+        --text-color: #f2f2f7;         /* 文字: 白 */
+        
+        --input-bg: #151515;           /* 入力欄: ほぼ黒（凹み表現） */
+        --input-border: #3a3a3c;
+
+        --btn-primary-bg: #e5e5ea;     /* ボタン: シルバー */
+        --btn-primary-text: #1c1c1e;
+
+        --border-color: #48484a;
+        --highlight-color: #3a3a3c;
+        --accent-color: #d1d1d6;
+        
+        --final-bg: #d1d1d6;
+        --final-text: #1c1c1e;
         --danger-color: #ff453a;
         --shadow-color: rgba(0, 0, 0, 0.5);
-        --tooltip-bg: rgba(249, 249, 249, 0.95);
+
+        --lightning-color: #4da3ff;    /* 高速モード（水色） */
+        --tooltip-bg: rgba(240, 240, 240, 0.95);
+        --tooltip-text: #1c1c1e;
     }
 
     /* ==========================================================================
        2. 基本レイアウト (Layout)
        ========================================================================== */
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
         background: var(--bg-color);
         color: var(--text-color);
         display: flex;
         flex-direction: column;
         align-items: center;
         padding: 20px;
-        margin: 0; /* マージンリセット */
+        margin: 0;
         transition: background 0.3s, color 0.3s;
         min-height: 100vh;
         box-sizing: border-box;
@@ -54,7 +83,9 @@
         align-items: flex-start;
         width: 100%;
         max-width: 1200px;
-        gap: 15px; /* 間隔を少し調整 */
+        gap: 20px;
+        position: relative;
+        z-index: 1;
     }
     .main {
         text-align: center;
@@ -64,27 +95,27 @@
         flex-direction: column;
         align-items: center;
         min-width: 0;
-        width: 100%; /* モバイル用に幅確保 */
+        width: 100%;
+        z-index: 2;
     }
 
     /* ==========================================================================
        3. サイドバー: リスト & 履歴 (Sidebar)
        ========================================================================== */
     #itemList, #history {
-        width: 260px;
+        width: 280px;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 6px;
-        padding: 10px;
-        font-size: 16px;
-        /* margin削除しgapで制御 */
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 15px;
         display: flex;
         flex-direction: column;
-        max-height: calc(100vh - 40px); /* PC用高さ制限 */
+        max-height: calc(100vh - 40px);
         transition: background 0.3s, border-color 0.3s;
-        box-shadow: 0 2px 8px var(--shadow-color);
+        box-shadow: 0 4px 12px var(--shadow-color);
         box-sizing: border-box;
-        flex-shrink: 0; 
+        flex-shrink: 0;
     }
     #list, #historyList {
         list-style: none;
@@ -94,54 +125,38 @@
         flex: 1;
         overflow-y: auto;
         overflow-x: hidden;
-        min-height: 150px; /* 空でも高さを確保 */
+        min-height: 150px;
     }
     /* スクロールバー装飾 */
     #itemList::-webkit-scrollbar, #history::-webkit-scrollbar,
-    #list::-webkit-scrollbar, #historyList::-webkit-scrollbar {
-        width: 6px;
-    }
+    #list::-webkit-scrollbar, #historyList::-webkit-scrollbar { width: 6px; }
     #itemList::-webkit-scrollbar-thumb, #history::-webkit-scrollbar-thumb,
     #list::-webkit-scrollbar-thumb, #historyList::-webkit-scrollbar-thumb {
-        background: var(--border-color);
-        border-radius: 4px;
+        background: var(--border-color); border-radius: 4px;
     }
     
     #itemList h2, #history h2 {
-        text-align: center;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
+        text-align: center; margin: 0 0 10px 0; padding-bottom: 10px;
         border-bottom: 2px solid var(--border-color);
-        flex-shrink: 0;
-        font-size: 1.2rem;
+        flex-shrink: 0; font-size: 1.1rem; font-weight: 600; letter-spacing: 0.05em;
     }
 
     /* リストアイテム */
     #itemList li, #historyList li {
-        padding: 8px 0; /* タップしやすいように少し広げる */
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        position: relative;
-        list-style: none;
-        flex-shrink: 0;
+        padding: 10px 4px; border-bottom: 1px solid var(--border-color);
+        display: flex; align-items: center; gap: 8px; position: relative;
+        list-style: none; flex-shrink: 0; transition: background 0.1s;
     }
-    #itemList li {
-        justify-content: space-between;
-        cursor: grab;
-    }
+    #itemList li:last-child { border-bottom: none; }
+    
+    #itemList li { justify-content: space-between; cursor: grab; }
     #itemList li:active { cursor: grabbing; }
     #itemList li.dragging { opacity: 0.5; background: var(--highlight-color); }
     #itemList li.over { border-top: 2px solid var(--accent-color); }
     
     #historyList li {
-        justify-content: flex-start;
-        padding-left: 4px;
-        cursor: default;
-        white-space: normal;
-        word-break: break-word;
-        line-height: 1.4;
+        justify-content: flex-start; cursor: default;
+        white-space: normal; word-break: break-word; line-height: 1.4; font-size: 0.95em;
     }
 
     .item-text {
@@ -149,251 +164,245 @@
         white-space: normal; word-break: break-word; overflow: visible; 
         pointer-events: auto; line-height: 1.4; padding: 2px 0;
     }
-    .highlight { background-color: var(--highlight-color); }
-    .final-highlight { background-color: var(--highlight-color); font-weight: bold; }
-    .inactive .item-text { color: #aaa; opacity: 0.6; }
+
+    /* ハイライト設定 */
+    .highlight { background-color: var(--highlight-color); border-radius: 4px; font-weight: 600; }
+    
+    /* 当選確定時のハイライト */
+    .final-highlight { 
+        background-color: var(--final-bg); color: var(--final-text); 
+        font-weight: bold; border-radius: 4px; padding-left: 8px;
+    }
+    .final-highlight .icon-btn { color: var(--final-text); opacity: 0.8; }
+    .final-highlight .item-text { text-decoration: none !important; color: var(--final-text) !important; }
+    
+    /* 無効状態 */
+    .inactive .item-text { color: var(--border-color); text-decoration: line-through; }
 
     /* ==========================================================================
-       4. ルーレット & タイトル (Roulette & Title)
+       4. ルーレット & タイトルエリア
        ========================================================================== */
     .title-wrapper {
-        position: relative;
-        margin: 0 auto 15px auto;
-        width: 100%;
-        max-width: 400px;
+        position: relative; margin: 0 auto 20px auto; width: 100%; max-width: 400px;
     }
     #titleInput {
-        font-size: clamp(24px, 5vw, 32px); /* 画面幅に応じてフォントサイズ調整 */
-        font-weight: 700; text-align: center;
+        font-size: clamp(24px, 5vw, 28px); font-weight: 700; text-align: center;
         border: none; border-bottom: 2px solid transparent;
         background: transparent; color: var(--text-color);
-        outline: none; width: 100%; padding: 5px 0;
-        transition: all 0.3s ease; letter-spacing: 1.5px;
-        font-family: inherit;
-        box-sizing: border-box;
+        outline: none; width: 100%; padding: 8px 0;
+        transition: all 0.3s ease; letter-spacing: 0.05em;
+        font-family: inherit; box-sizing: border-box;
     }
-    #titleInput:hover, #titleInput:focus {
-        border-bottom-color: var(--accent-color);
-        letter-spacing: 2px;
-    }
+    #titleInput:hover, #titleInput:focus { border-bottom-color: var(--accent-color); }
     #titleInput::placeholder { color: var(--border-color); font-weight: normal; }
 
     #selectedItem {
-        font-size: clamp(18px, 4vw, 24px);
-        font-weight: bold; margin: 10px 0 20px 0; min-height: 50px;
+        font-size: clamp(18px, 4vw, 22px); font-weight: bold;
+        margin: 0 0 20px 0; min-height: 60px;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
         width: 100%;
     }
     .winner-desc {
-        font-size: 14px; color: var(--text-color); opacity: 0.7;
-        margin-top: 4px; font-weight: normal; letter-spacing: 0.05em;
+        font-size: 14px; opacity: 0.8; margin-top: 6px; font-weight: normal; 
         white-space: pre-wrap; word-break: break-word; 
-        max-width: 480px; width: 95%; 
-        padding: 0 10px; box-sizing: border-box;
+        max-width: 480px; width: 95%; padding: 0 10px; box-sizing: border-box;
     }
 
-    /* ルーレット本体：レスポンシブ対応 */
+    /* ルーレット本体 */
     .roulette-wrapper {
-        position: relative;
-        width: 100%;
-        max-width: 400px;
-        aspect-ratio: 1 / 1; /* 正方形を維持 */
-        height: auto; /* 固定値を解除 */
-        margin: 0 auto;
-        border-radius: 50%; box-shadow: 0 10px 25px var(--shadow-color);
+        position: relative; width: 100%; max-width: 360px; aspect-ratio: 1 / 1;
+        height: auto; margin: 0 auto;
+        border-radius: 50%; box-shadow: 0 12px 30px var(--shadow-color);
         flex-shrink: 0; cursor: pointer; transition: transform 0.1s;
+        z-index: 5;
     }
     .roulette-wrapper:active { transform: scale(0.98); }
     .roulette-wrapper::after {
         content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 10%; height: 10%; /* ％指定に変更 */
+        width: 12%; height: 12%;
         background: var(--card-bg); border: 4px solid var(--text-color);
-        border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.3); z-index: 10; pointer-events: none;
+        border-radius: 50%; z-index: 10; pointer-events: none;
     }
     #roulette {
-        width: 100%; height: 100%; /* 親要素に追従 */
+        width: 100%; height: 100%;
         transform: rotate(0deg); filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
     }
+    /* 針 */
     .pointer {
-        position: absolute; top: 50%; left: 100%; transform: translate(-55%, -50%) rotate(270deg);
-        width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent;
-        border-bottom: 24px solid var(--text-color); z-index: 20; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        position: absolute; top: 50%; left: 100%; transform: translate(-60%, -50%) rotate(270deg);
+        width: 0; height: 0; 
+        border-left: 20px solid transparent; border-right: 20px solid transparent;
+        border-bottom: 28px solid var(--text-color); 
+        z-index: 20; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
     }
 
     /* ==========================================================================
-       5. コントロールエリア (Controls)
+       5. コントロールエリア (Input & Buttons)
        ========================================================================== */
     .controls {
-        display: flex; flex-direction: column; align-items: center; gap: 12px;
-        margin-top: 20px; width: 100%;
-        max-width: 500px; /* 広がりすぎ防止 */
+        display: flex; flex-direction: column; align-items: center; gap: 16px;
+        margin-top: 30px; width: 100%; max-width: 500px;
+        position: relative; z-index: 50;
     }
     .input-group, .action-group, .file-group, .setting-group {
-        display: flex; justify-content: center; gap: 8px; width: 100%;
-        position: relative; z-index: 5;
-        flex-wrap: wrap; /* スマホで折り返し許可 */
+        display: flex; justify-content: center; gap: 10px; width: 100%;
+        flex-wrap: wrap;
     }
-    .action-group + .action-group { margin-top: -5px; }
+    .file-area { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 6px; }
+    .setting-group { align-items: center; justify-content: center; gap: 12px; }
     
-    .file-area {
-        display: flex; flex-direction: column; align-items: center; width: 100%; gap: 5px;
-        position: relative; z-index: 6;
+    /* --- 共通スタイル: 高さ・角丸 --- */
+    button, .custom-file-btn, .input-group input[type="text"], .spin-count-wrapper, .file-input-wrapper {
+        height: 48px; /* 全要素の高さ */
+        border-radius: 8px; /* 角丸 */
+        box-sizing: border-box;
     }
 
-    .setting-group { align-items: center; margin-bottom: -5px; }
+    /* --- 入力欄 (Input) --- */
+    .input-group input[type="text"] {
+        flex: 1; padding: 0 12px; font-size: 16px;
+        background: var(--input-bg); 
+        color: var(--text-color);
+        border: 1px solid var(--input-border);
+        min-width: 150px; outline: none; transition: border-color 0.2s;
+    }
+    .input-group input[type="text"]:focus { border-color: var(--accent-color); }
+
+    /* --- ボタン共通 (Base Button) --- */
+    button, .custom-file-btn {
+        font-size: 15px; font-weight: 600;
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; position: relative; transition: all 0.2s; z-index: 10;
+        touch-action: manipulation;
+        opacity: 0.8;
+    }
+    button:hover, .custom-file-btn:hover { opacity: 1; transform: translateY(-1px); }
+    button:active, .custom-file-btn:active { transform: translateY(1px); opacity: 1; }
+
+    /* --- Primary Button --- */
+    button.primary-btn, #btnAdd, .custom-file-btn, #btnExport {
+        background: var(--btn-primary-bg); color: var(--btn-primary-text);
+        border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+
+    /* --- ファイル選択ボタン (不具合対策済み) --- */
+    .file-input-wrapper {
+        flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
+        cursor: pointer; min-width: 120px; overflow: hidden;
+        border: none; padding: 0; background: transparent;
+        z-index: 20;
+    }
+    #fileInput { 
+        display: block !important; 
+        position: absolute; top: 0; left: 0; 
+        width: 100% !important; height: 100% !important; 
+        opacity: 0 !important; 
+        z-index: 100; /* 最前面 */
+        cursor: pointer;
+        appearance: none; -webkit-appearance: none;
+    }
+    .custom-file-btn { 
+        width: 100%; height: 100%;
+        pointer-events: none !important; 
+        z-index: 1;
+    }
+
+    /* --- ボタン幅調整 --- */
+    #btnAdd, #btnExport { width: 80px; flex: 0 0 80px; }
+    #btnExport svg { width: 22px; height: 22px; fill: currentColor; }
+    .action-group button { flex: 1; min-width: 140px; }
+
+    /* --- サブ操作ボタン (Outline) --- */
+    button.clear-btn {
+        background: transparent; border: 1px solid var(--danger-color);
+        color: var(--danger-color); box-shadow: none;
+    }
+    button.clear-btn:hover {
+        background: var(--danger-color); color: #ffffff;
+        box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+    }
+
+    /* --- 高速モードボタン --- */
+    #fastModeBtn {
+        width: 48px; height: 48px;
+        background: transparent; border: 1px solid transparent;
+        color: var(--text-color); transition: all 0.3s;
+    }
+    .fast-mode-on {
+        color: var(--lightning-color) !important; opacity: 1 !important;
+        filter: drop-shadow(0 0 6px var(--lightning-color));
+        transform: scale(1.1);
+    }
+    button.icon-only svg { width: 24px; height: 24px; fill: currentColor; }
+
+    /* --- 回数入力 --- */
     .spin-count-wrapper {
         display: flex; align-items: center; gap: 8px;
-        background: transparent; padding: 2px 8px;
-        border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;
+        background: var(--card-bg); padding: 0 12px;
+        border: 1px solid var(--border-color);
     }
-    .spin-count-wrapper:hover { opacity: 1; }
-    
-    .spin-label { font-size: 13px; color: var(--text-color); font-weight: 500; }
-    
+    .spin-label { font-size: 14px; color: var(--text-color); font-weight: 500; }
     #spinCountInput {
-        width: 50px; height: 32px; text-align: center;
-        background: var(--card-bg); color: var(--text-color);
-        border: 1px solid var(--border-color); border-radius: 4px;
-        font-size: 16px; /* ズーム防止 */
-        -moz-appearance: textfield; 
+        width: 40px; height: 30px; text-align: center;
+        background: transparent; color: var(--text-color);
+        border: none; font-size: 16px; font-weight: bold;
+        -moz-appearance: textfield; outline: none;
     }
     #spinCountInput::-webkit-outer-spin-button,
-    #spinCountInput::-webkit-inner-spin-button {
-        -webkit-appearance: none; margin: 0;
-    }
+    #spinCountInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-    .fast-mode-on {
-        color: var(--accent-color) !important; opacity: 1 !important;
-        filter: drop-shadow(0 0 3px var(--accent-color)); font-weight: bold;
-    }
-    #fastModeBtn {
-        width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;
-    }
-
-    .input-group input[type="text"], .file-input-wrapper, button, .custom-file-btn { 
-        height: 44px; /* スマホ操作に適した高さ */
-        box-sizing: border-box; 
-    }
-    .input-group input[type="text"] {
-        flex: 1; padding: 0 10px; font-size: 16px;
-        background: var(--card-bg); color: var(--text-color);
-        border: 1px solid var(--border-color); border-radius: 4px;
-        min-width: 150px; /* 入力欄が潰れないように */
-    }
-
-    .file-input-wrapper {
-        flex: 1; position: relative; display: flex; align-items: center; justify-content: stretch;
-        cursor: pointer; min-width: 120px;
-    }
-    #fileInput { display: none; }
-    .custom-file-btn { 
-        width: 100%; height: 100%; z-index: 1; pointer-events: none; display: flex; align-items: center; justify-content: center;
-    }
-    .file-input-wrapper.dragover .custom-file-btn {
-        background: var(--accent-color); color: white;
-        box-shadow: 0 0 10px var(--accent-color); transform: scale(1.02); opacity: 1;
-    }
-
-    button, .custom-file-btn {
-        background: var(--text-color); color: var(--bg-color);
-        border: none; border-radius: 6px; cursor: pointer;
-        transition: background 0.3s, transform 0.2s, opacity 0.3s;
-        position: relative; display: inline-flex; align-items: center; justify-content: center;
-        font-size: 16px; opacity: 0.8; z-index: 20;
-        touch-action: manipulation; /* タップの遅延を防止 */
-    }
-    button:hover, .custom-file-btn:hover { opacity: 1; }
-    button:active, .custom-file-btn:active { transform: scale(0.96); }
-    button.clear-btn:hover { background-color: var(--danger-color); color: white; opacity: 1; }
-    
-    .input-group button, .file-group button.icon-only { width: 60px; padding: 0; flex: 0 0 60px; }
-    .action-group button { flex: 1; white-space: nowrap; padding: 0 10px; min-width: 120px; }
-    button.icon-only svg { width: 24px; height: 24px; fill: currentColor; }
-    
     #fileNameDisplay {
-        font-size: 13px; color: var(--text-color); opacity: 0.8;
-        height: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+        font-size: 12px; color: var(--text-color); opacity: 0.6;
+        height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
     }
-    
     .icon-btn {
-        background: none; border: none; padding: 8px; /* タップ領域確保 */
-        font-size: 18px; color: var(--text-color); opacity: 0.8; height: auto;
+        background: none; border: none; padding: 8px; height: auto;
+        font-size: 18px; color: var(--text-color); opacity: 0.6; 
     }
-    .icon-btn:hover { color: var(--accent-color); opacity: 1; }
+    .icon-btn:hover { opacity: 1; transform: scale(1.1); background: none; }
     .icon-btn.trash-btn:hover { color: var(--danger-color); }
 
     /* ==========================================================================
-       6. ツールチップ (JS制御)
+       6. ツールチップ & その他
        ========================================================================== */
     #global-tooltip {
-        position: fixed; background: var(--tooltip-bg); color: var(--bg-color);
-        padding: 8px 12px; font-size: 13px; border-radius: 6px;
+        position: fixed; background: var(--tooltip-bg); color: var(--tooltip-text);
+        padding: 8px 12px; font-size: 12px; border-radius: 6px;
         pointer-events: none; z-index: 10000; opacity: 0;
-        transition: opacity 0.15s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        backdrop-filter: blur(4px); white-space: nowrap; font-weight: normal; max-width: 90vw; 
+        transition: opacity 0.15s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        backdrop-filter: blur(4px); white-space: nowrap; font-weight: 500; max-width: 90vw; 
     }
 
     #darkModeBtn {
-        position: fixed; top: 10px; right: 10px; 
-        background: rgba(128,128,128,0.2); border-radius: 50%;
-        border: none; cursor: pointer;
-        width: 40px; height: 40px; opacity: 0.8; z-index: 9999;
-        transition: opacity 0.3s;
-        padding: 8px;
+        position: fixed; top: 15px; right: 15px; 
+        background: var(--card-bg); border: 1px solid var(--border-color);
+        border-radius: 50%; cursor: pointer;
+        width: 44px; height: 44px; z-index: 9999;
+        transition: opacity 0.3s; padding: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1); color: var(--text-color);
     }
-    #darkModeBtn:hover { opacity: 1; background: rgba(128,128,128,0.4); }
-    #darkModeBtn svg { fill: var(--text-color); width: 100%; height: 100%; }
+    #darkModeBtn:hover { transform: scale(1.05); }
+    #darkModeBtn svg { fill: currentColor; width: 100%; height: 100%; }
 
-    /* ==========================================================================
-       7. レスポンシブ対応 (Responsive Design)
-       ========================================================================== */
     @media (max-width: 900px) {
-        .container {
-            flex-direction: column; /* 縦並びに変更 */
-            align-items: center;
-            gap: 20px;
-        }
-
-        /* 順序変更: 1.ルーレット操作(main) 2.リスト 3.履歴 */
-        .main {
-            order: 1;
-            width: 100%;
-            margin: 0;
-        }
-        #itemList {
-            order: 2;
-            width: 100%;
-            max-width: 600px;
-            max-height: 300px; /* スマホでは高さを制限 */
-        }
-        #history {
-            order: 3;
-            width: 100%;
-            max-width: 600px;
-            max-height: 250px;
-        }
-
-        /* タイトルなどの余白調整 */
+        .container { flex-direction: column; align-items: center; gap: 30px; }
+        .main { order: 1; margin: 0; }
+        #itemList { order: 2; width: 100%; max-width: 600px; max-height: 300px; }
+        #history { order: 3; width: 100%; max-width: 600px; max-height: 250px; }
         .title-wrapper { margin-bottom: 10px; }
-        #selectedItem { margin: 5px 0 15px 0; min-height: 40px; }
-        
-        /* ポインタ位置の微調整（縮小対応） */
-        .pointer {
-            transform: translate(-50%, -50%) rotate(270deg); /* ずれ防止 */
-            left: 102%; /* 少し近づける */
-        }
+        .pointer { transform: translate(-50%, -50%) rotate(270deg); left: 102%; }
     }
 </style>
 </head>
 <body class="dark">
 
-<!-- ダークモード切替 -->
 <button id="darkModeBtn" title="ダークモード切替">
     <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c4.97 0 9-4.03 9-9a9 9 0 0 0-9-9z"/></svg>
 </button>
 
 <div class="container">
-    <!-- 左サイドバー: 抽選リスト -->
+    <!-- 左サイドバー -->
     <div id="itemList">
         <h2 id="txtListHeader">抽選リスト</h2>
         <ul id="list"></ul>
@@ -401,15 +410,12 @@
 
     <!-- メインエリア -->
     <div class="main">
-        <!-- タイトル -->
         <div class="title-wrapper">
             <input id="titleInput" type="text" value="ルーレット" placeholder="タイトルを入力" />
         </div>
         
-        <!-- 結果表示 -->
         <div id="selectedItem"></div>
         
-        <!-- ルーレット描画 -->
         <div class="roulette-wrapper">
             <div class="pointer"></div>
             <svg id="roulette" viewBox="0 0 400 400"></svg>
@@ -417,52 +423,48 @@
         
         <!-- 操作パネル -->
         <div class="controls">
-            <!-- 項目追加 -->
             <div class="input-group">
                 <input type="text" id="itemInput" placeholder="抽選項目を入力">
-                <button id="btnAdd" onclick="addItem()">追加</button>
+                <button id="btnAdd" class="primary-btn" onclick="addItem()">追加</button>
             </div>
             
-            <!-- ファイル操作 -->
             <div class="file-area">
                 <div class="file-group">
+                    <!-- labelタグでinputを包むことでクリック判定を保証 -->
                     <label class="file-input-wrapper" id="dropZone" data-tooltip="TXT:リストの一括追加 / CSV:状態を復元">
                         <input type="file" id="fileInput" accept=".csv,.txt" title="">
                         <div class="custom-file-btn" id="btnFileSelect">ファイル選択</div>
                     </label>
-                    <button class="icon-only" id="btnExport" onclick="exportCSV()" data-tooltip="現在の状態をCSV保存（空ならサンプル出力）">
+                    <button id="btnExport" class="primary-btn" onclick="exportCSV()" data-tooltip="現在の状態をCSV保存">
                         <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
                     </button>
                 </div>
                 <div id="fileNameDisplay"></div>
             </div>
 
-            <!-- 回数・高速設定 -->
             <div class="setting-group">
-                <div class="spin-count-wrapper" id="spinCountWrapper" data-tooltip="連続して抽選を行う回数を指定します。&#10;例:「4」と入力すると4回連続で回ります。">
+                <div class="spin-count-wrapper" id="spinCountWrapper" data-tooltip="連続して抽選を行う回数を指定">
                     <span class="spin-label" id="txtSpinCount">連続回数:</span>
                     <input type="number" id="spinCountInput" value="1" min="1" max="99">
                 </div>
-                <button id="fastModeBtn" class="icon-btn" onclick="toggleFastMode()" data-tooltip="高速処理: オンにすると1回の回転時間で&#10;全回数分の抽選を一気に行います">
+                <button id="fastModeBtn" class="icon-only" onclick="toggleFastMode()" data-tooltip="高速処理: 一括抽選モード">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
                 </button>
             </div>
 
-            <!-- 実行ボタン -->
             <div class="action-group">
-                <button id="btnStart" onclick="startRoulette(false)" data-tooltip="抽選結果を除外しない">START</button>
-                <button id="btnStartRemove" onclick="startRoulette(true)" data-tooltip="抽選結果を除外する">START & REMOVE</button>
+                <button id="btnStart" class="primary-btn" onclick="startRoulette(false)" data-tooltip="抽選結果を除外しない">START</button>
+                <button id="btnStartRemove" class="primary-btn" onclick="startRoulette(true)" data-tooltip="抽選結果を除外する">START & REMOVE</button>
             </div>
             
-            <!-- クリア・リセット -->
             <div class="action-group">
-                <button class="clear-btn" id="btnClear" onclick="clearAllData()" data-tooltip="全てのデータ（リスト・履歴）を削除して&#10;初期状態に戻します">CLEAR</button>
-                <button class="clear-btn" id="btnReset" onclick="resetStatus()" data-tooltip="履歴を削除し、全ての項目を&#10;抽選対象に戻します">RESET</button>
+                <button class="clear-btn" id="btnClear" onclick="clearAllData()" data-tooltip="データを全削除">CLEAR</button>
+                <button class="clear-btn" id="btnReset" onclick="resetStatus()" data-tooltip="履歴を削除しリセット">RESET</button>
             </div>
         </div>
     </div>
 
-    <!-- 右サイドバー: 履歴 -->
+    <!-- 右サイドバー -->
     <div id="history">
         <h2 id="txtHistoryHeader">抽選結果</h2>
         <ul id="historyList"></ul>
@@ -470,9 +472,6 @@
 </div>
 
 <script>
-// ==========================================================================
-// 画面内テキストの一元管理 (TEXT CONFIG)
-// ==========================================================================
 const TEXT_CONFIG = {
     titles: {
         pageTitle: "stylish roulette",
@@ -489,17 +488,13 @@ const TEXT_CONFIG = {
         clear: "CLEAR",
         reset: "RESET"
     },
-    inputs: {
-        itemPlaceholder: "抽選項目を入力"
-    },
-    labels: {
-        spinCount: "連続回数:"
-    },
+    inputs: { itemPlaceholder: "抽選項目を入力" },
+    labels: { spinCount: "連続回数:" },
     tooltips: {
         dropZone: "TXT:リストの一括追加 / CSV:状態を復元",
-        export: "現在の状態をCSV保存（空ならサンプル出力）",
+        export: "現在の状態をCSV保存",
         spinCount: "連続抽選回数を指定",
-        fastMode: "高速処理: 指定回数分の抽選を一括処理",
+        fastMode: "高速処理: 一括抽選モード",
         start: "抽選結果を除外しない",
         startRemove: "抽選結果を除外する",
         clear: "初期状態に戻す",
@@ -513,7 +508,8 @@ const TEXT_CONFIG = {
         emptySample: "サンプルのCSVを出力しますか？",
         confirmClear: "全てのデータ（リスト・履歴）を削除して初期状態に戻しますか？",
         confirmReset: "履歴を削除し、全ての項目を抽選対象に戻しますか？",
-        outOfStock: "抽選対象がなくなりました。"
+        outOfStock: "抽選対象がなくなりました。",
+        fastModeStatus: "⚡高速モード中"
     },
     sampleData: [
         { text: "りんご", desc: "赤い果物。医者いらず。" },
@@ -522,26 +518,20 @@ const TEXT_CONFIG = {
     ]
 };
 
-// ==========================================================================
-// システム変数 (System Variables)
-// ==========================================================================
 let items = []; 
 let idCounter = 0;
 let angle = 0;
 let lastWinnerId = null;
+let currentSessionWinners = []; 
 let dragSrcEl = null;
 let lastModeRemove = false;
 let isSpinning = false;
 let isFastMode = false;
 
-// ==========================================================================
-// 初期化処理 (Initialization)
-// ==========================================================================
 document.addEventListener('DOMContentLoaded', () => { 
     applyUIStrings(); 
     renderRoulette();
     initTooltip(); 
-    
     document.querySelector('.roulette-wrapper').addEventListener('click', () => {
         startRoulette(lastModeRemove);
     });
@@ -551,37 +541,23 @@ function applyUIStrings() {
     document.title = TEXT_CONFIG.titles.pageTitle;
     document.getElementById('txtListHeader').textContent = TEXT_CONFIG.titles.listHeader;
     document.getElementById('txtHistoryHeader').textContent = TEXT_CONFIG.titles.historyHeader;
-    
     const titleInput = document.getElementById('titleInput');
-    if(titleInput.value === "ルーレット" || titleInput.value === "") {
-        titleInput.value = TEXT_CONFIG.titles.defaultInputTitle;
-    }
+    if(titleInput.value === "ルーレット" || titleInput.value === "") titleInput.value = TEXT_CONFIG.titles.defaultInputTitle;
     titleInput.placeholder = TEXT_CONFIG.titles.titlePlaceholder;
-
     document.getElementById('itemInput').placeholder = TEXT_CONFIG.inputs.itemPlaceholder;
     document.getElementById('btnAdd').textContent = TEXT_CONFIG.buttons.add;
     document.getElementById('btnFileSelect').textContent = TEXT_CONFIG.buttons.fileSelect;
-    
     document.getElementById('txtSpinCount').textContent = TEXT_CONFIG.labels.spinCount;
     document.getElementById('spinCountWrapper').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.spinCount);
     document.getElementById('fastModeBtn').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.fastMode);
-
-    const btnStart = document.getElementById('btnStart');
-    btnStart.textContent = TEXT_CONFIG.buttons.start;
-    btnStart.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.start);
-
-    const btnStartRemove = document.getElementById('btnStartRemove');
-    btnStartRemove.textContent = TEXT_CONFIG.buttons.startRemove;
-    btnStartRemove.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.startRemove);
-
-    const btnClear = document.getElementById('btnClear');
-    btnClear.textContent = TEXT_CONFIG.buttons.clear;
-    btnClear.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.clear);
-
-    const btnReset = document.getElementById('btnReset');
-    btnReset.textContent = TEXT_CONFIG.buttons.reset;
-    btnReset.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.reset);
-
+    document.getElementById('btnStart').textContent = TEXT_CONFIG.buttons.start;
+    document.getElementById('btnStart').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.start);
+    document.getElementById('btnStartRemove').textContent = TEXT_CONFIG.buttons.startRemove;
+    document.getElementById('btnStartRemove').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.startRemove);
+    document.getElementById('btnClear').textContent = TEXT_CONFIG.buttons.clear;
+    document.getElementById('btnClear').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.clear);
+    document.getElementById('btnReset').textContent = TEXT_CONFIG.buttons.reset;
+    document.getElementById('btnReset').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.reset);
     document.getElementById('dropZone').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.dropZone);
     document.getElementById('btnExport').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.export);
 }
@@ -590,21 +566,14 @@ document.getElementById('darkModeBtn').addEventListener('click', () => {
     document.body.classList.toggle('dark');
     renderRoulette();
 });
-
 document.getElementById('itemInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
-// ==========================================================================
-// ツールチップ制御 (Tooltip Logic)
-// ==========================================================================
 function initTooltip() {
     const existing = document.getElementById('global-tooltip');
     if (existing) existing.remove();
-
     const tooltip = document.createElement('div');
     tooltip.id = 'global-tooltip';
     document.body.appendChild(tooltip);
-
-    // PC向け: マウスホバー
     document.addEventListener('mouseover', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (target) {
@@ -612,41 +581,37 @@ function initTooltip() {
             tooltip.style.opacity = '1';
         }
     });
-
     document.addEventListener('mouseout', (e) => {
         const target = e.target.closest('[data-tooltip]');
         if (target) {
             tooltip.style.opacity = '0';
         }
     });
-
     document.addEventListener('mousemove', (e) => {
         if (tooltip.style.opacity === '1') {
             const offset = 15;
             let left = e.clientX + offset;
             let top = e.clientY + offset;
-            // 画面端の処理
             if (left + tooltip.offsetWidth > window.innerWidth) left = e.clientX - tooltip.offsetWidth - offset;
             if (top + tooltip.offsetHeight > window.innerHeight) top = e.clientY - tooltip.offsetHeight - offset;
-            
-            // スマホでの誤表示防止
             tooltip.style.left = `${left}px`;
             tooltip.style.top = `${top}px`;
         }
     });
 }
 
-// ==========================================================================
-// データ操作・ファイル処理 (Data & File Handling)
-// ==========================================================================
 function toggleFastMode() {
     isFastMode = !isFastMode;
     const btn = document.getElementById('fastModeBtn');
+    const display = document.getElementById('selectedItem');
     if (isFastMode) {
         btn.classList.add('fast-mode-on');
+        display.innerHTML = `<div style="opacity:0.8; font-size: 0.9em;">${TEXT_CONFIG.messages.fastModeStatus}</div>`;
     } else {
         btn.classList.remove('fast-mode-on');
+        display.innerHTML = ''; 
     }
+    renderRoulette();
 }
 
 function addItem(text = null) {
@@ -693,7 +658,6 @@ function exportCSV() {
     csvContent.push('Type,Text,Active,Description');
     const title = document.getElementById('titleInput').value.replace(/"/g, '""');
     csvContent.push(`Title,"${title}",,`);
-
     if (items.length === 0) {
         if (!confirm(TEXT_CONFIG.messages.emptySample)) return;
         TEXT_CONFIG.sampleData.forEach(d => {
@@ -755,6 +719,7 @@ function restoreFromCSV(csvText) {
     items = [];
     idCounter = 0;
     lastWinnerId = null;
+    currentSessionWinners = [];
     document.getElementById('historyList').innerHTML = '';
     document.getElementById('selectedItem').innerHTML = '';
     const lines = csvText.split(/\r?\n/);
@@ -762,12 +727,10 @@ function restoreFromCSV(csvText) {
         if (!line.trim() || line.startsWith('Type,')) return; 
         const cols = parseCSVLine(line);
         if (cols.length < 2) return;
-
         const type = cols[0];
         const text = cols[1];
         const val = cols[2];
         const desc = cols[3] || '';
-
         if (type === 'Item') {
             const isActive = parseInt(val) === 1;
             items.push({ id: idCounter++, text: text, active: isActive, desc: desc });
@@ -807,6 +770,7 @@ function clearAllData() {
         document.getElementById('historyList').innerHTML = '';
         document.getElementById('selectedItem').innerHTML = '';
         lastWinnerId = null;
+        currentSessionWinners = [];
         idCounter = 0;
         updateUI();
     }
@@ -818,13 +782,11 @@ function resetStatus() {
         document.getElementById('selectedItem').innerHTML = '';
         items.forEach(i => i.active = true);
         lastWinnerId = null;
+        currentSessionWinners = [];
         updateUI();
     }
 }
 
-// ==========================================================================
-// ドラッグ&ドロップ制御 (Drag & Drop Logic)
-// ==========================================================================
 function handleDragStart(e) {
     if(e.target.tagName.toLowerCase() === 'button' || e.target.closest('button')) {
         e.preventDefault(); return;
@@ -855,9 +817,6 @@ function handleDragEnd(e) {
     document.querySelectorAll('#list li').forEach(li => { li.classList.remove('over'); li.classList.remove('dragging'); });
 }
 
-// ==========================================================================
-// 描画関連 (Rendering)
-// ==========================================================================
 function renderList() {
     const ul = document.getElementById('list');
     ul.innerHTML = '';
@@ -871,8 +830,12 @@ function renderList() {
         li.addEventListener('drop', handleDrop, false);
         li.addEventListener('dragend', handleDragEnd, false);
 
-        if (!item.active) li.classList.add('inactive');
-        if (item.id === lastWinnerId) li.classList.add('final-highlight');
+        // 今回のセッションで当選した項目は、active状態に関わらずハイライトを優先
+        if (currentSessionWinners.includes(item.id)) {
+            li.classList.add('final-highlight');
+        } else if (!item.active) {
+            li.classList.add('inactive');
+        }
 
         const trashBtn = document.createElement('button');
         trashBtn.className = 'icon-btn trash-btn';
@@ -899,8 +862,8 @@ function renderList() {
 function renderRoulette() {
     const svg = document.getElementById('roulette');
     const isDark = document.body.classList.contains('dark');
-    const startColor = isDark ? 200 : 250;
-    const endColor = isDark ? 40 : 100;
+    const startColor = isDark ? 200 : 255;
+    const endColor = isDark ? 60 : 150;
     const activeList = items.filter(i => i.active);
 
     if (!activeList.length) {
@@ -916,23 +879,47 @@ function renderRoulette() {
 
     svg.innerHTML = '';
     const segmentAngle = 360 / activeList.length;
+    const textColor = isDark ? '#fff' : '#333';
+
     activeList.forEach((item, i) => {
-        const ratio = activeList.length > 1 ? i / (activeList.length) : 0;
+        const ratio = activeList.length > 1 ? i / (activeList.length - 1) : 0;
         const gray = Math.round(startColor - (startColor - endColor) * ratio);
         const color = `rgb(${gray},${gray},${gray})`;
         const startA = segmentAngle * i;
         const endA = startA + segmentAngle; 
-        const x1 = 200 + 190 * Math.cos(Math.PI * startA / 180);
-        const y1 = 200 + 190 * Math.sin(Math.PI * startA / 180);
-        const x2 = 200 + 190 * Math.cos(Math.PI * endA / 180);
-        const y2 = 200 + 190 * Math.sin(Math.PI * endA / 180);
+        const d2r = Math.PI / 180;
+        const x1 = 200 + 190 * Math.cos(startA * d2r);
+        const y1 = 200 + 190 * Math.sin(startA * d2r);
+        const x2 = 200 + 190 * Math.cos(endA * d2r);
+        const y2 = 200 + 190 * Math.sin(endA * d2r);
+        
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', `M200,200 L${x1},${y1} A190,190 0 ${segmentAngle > 180 ? 1 : 0} 1 ${x2},${y2} Z`);
         path.setAttribute('fill', color);
-        path.setAttribute('stroke', color);
-        path.setAttribute('stroke-width', '2');
-        path.setAttribute('stroke-linejoin', 'round');
+        path.setAttribute('stroke', isDark ? '#333' : '#fff');
+        path.setAttribute('stroke-width', '1');
         svg.appendChild(path);
+
+        if (!isFastMode) {
+            const midAngle = startA + segmentAngle / 2;
+            const textRadius = 160; 
+            const tx = 200 + textRadius * Math.cos(midAngle * d2r);
+            const ty = 200 + textRadius * Math.sin(midAngle * d2r);
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', tx); text.setAttribute('y', ty);
+            text.setAttribute('fill', textColor);
+            text.setAttribute('font-size', activeList.length > 20 ? '10' : '14'); 
+            text.setAttribute('font-weight', 'bold');
+            text.setAttribute('text-anchor', 'middle'); 
+            text.setAttribute('dominant-baseline', 'middle'); 
+            text.setAttribute('stroke', isDark ? '#333' : '#eee'); 
+            text.setAttribute('stroke-width', '0.5');
+            text.setAttribute('paint-order', 'stroke');
+            text.setAttribute('transform', `rotate(${midAngle}, ${tx}, ${ty})`);
+            const originalIndex = items.findIndex(it => it.id === item.id) + 1;
+            text.textContent = originalIndex;
+            svg.appendChild(text);
+        }
     });
     
     const borderCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -944,9 +931,6 @@ function renderRoulette() {
     svg.appendChild(borderCircle);
 }
 
-// ==========================================================================
-// ルーレット回転ロジック (Core Logic)
-// ==========================================================================
 async function startRoulette(removeAfter) {
     if (isSpinning) return;
 
@@ -958,24 +942,22 @@ async function startRoulette(removeAfter) {
 
     isSpinning = true;
     lastModeRemove = removeAfter;
+    
+    // リセット：STARTボタンを押した瞬間にハイライトを消去し、UIを更新
+    currentSessionWinners = []; 
+    lastWinnerId = null;
+    document.getElementById('selectedItem').innerHTML = ''; // 結果表示クリア
+    updateUI();
 
     if (isFastMode) {
-        // --- 高速処理モード ---
         const results = [];
         for (let i = 0; i < count; i++) {
             const activeList = items.filter(item => item.active);
             if (activeList.length === 0) break;
-            
             const randomIndex = Math.floor(Math.random() * activeList.length);
             const winner = activeList[randomIndex];
-            
-            results.push({
-                text: winner.text,
-                originalIndex: items.findIndex(it => it.id === winner.id) + 1,
-                desc: winner.desc,
-                id: winner.id
-            });
-
+            currentSessionWinners.push(winner.id);
+            results.push({ text: winner.text, originalIndex: items.findIndex(it => it.id === winner.id) + 1, desc: winner.desc, id: winner.id });
             if (removeAfter) {
                 const targetItem = items.find(it => it.id === winner.id);
                 if(targetItem) targetItem.active = false;
@@ -987,14 +969,13 @@ async function startRoulette(removeAfter) {
             return alert(TEXT_CONFIG.messages.noItem);
         }
 
-        // 簡易回転アニメーション
+        document.getElementById('selectedItem').innerHTML = `<div style="opacity:0.8; font-size: 0.9em;">${TEXT_CONFIG.messages.fastModeStatus}</div>`;
+
         await new Promise(resolve => {
             const duration = 2000;
             const startTime = performance.now();
-            const baseRotations = 10;
-            const targetAngle = angle + 360 * baseRotations + Math.random() * 360; 
             const startAngle = angle;
-
+            const targetAngle = angle + 360 * 10 + Math.random() * 360; 
             function animate(time) {
                 const t = Math.min((time - startTime) / duration, 1);
                 const progress = 1 - Math.pow(1 - t, 3);
@@ -1010,16 +991,12 @@ async function startRoulette(removeAfter) {
             addHistory(res.text, res.originalIndex, res.desc);
         });
         
-        const lastRes = results[results.length - 1];
-        const descHtml = lastRes.desc ? `<div class="winner-desc">${lastRes.desc}</div>` : '';
-        document.getElementById('selectedItem').innerHTML = `<div>${lastRes.text}（番号: ${lastRes.originalIndex}）</div>${descHtml}`;
-        lastWinnerId = lastRes.id;
-        
-        updateUI();
+        // 高速モード時は「最後の当選者ID」は設定しない（リストで全て光らせるため）
+        lastWinnerId = null;
+        updateUI(); 
         isSpinning = false;
 
     } else {
-        // --- 通常モード ---
         for (let i = 0; i < count; i++) {
             const currentActive = items.filter(item => item.active);
             if (currentActive.length === 0) {
@@ -1038,47 +1015,50 @@ function spinOnce(activeList, removeAfter) {
         const randomIndex = Math.floor(Math.random() * activeList.length);
         const winner = activeList[randomIndex];
         const segmentAngle = 360 / activeList.length;
-        
-        const baseRotations = 5 + Math.floor(Math.random() * 5); 
-        const targetAngle = (baseRotations * 360) + (segmentAngle * randomIndex) + (segmentAngle / 2);
-        
+        const winnerCenterAngle = (segmentAngle * randomIndex) + (segmentAngle / 2);
+        const targetRotation = 360 - winnerCenterAngle;
+        const baseRotations = 360 * 5; 
+        const currentMod = angle % 360;
+        const distToTarget = (targetRotation - currentMod + 360) % 360;
+        const finalAngle = angle + baseRotations + distToTarget;
         const duration = 2500;
         const startTime = performance.now();
-
-        const currentRotation = angle % 360; 
-        const additionalRotation = (targetAngle - currentRotation) + 360 * 3;
-        const finalAngle = angle + additionalRotation;
 
         function animate(time) {
             const t = Math.min((time - startTime) / duration, 1);
             const progress = 1 - Math.pow(1 - t, 3);
-            
             const currentAnimAngle = angle + (finalAngle - angle) * progress;
             document.getElementById('roulette').style.transform = `rotate(${currentAnimAngle}deg)`;
             
-            const normalizedAngle = (currentAnimAngle % 360 + 360) % 360;
-            const currentIndex = Math.floor(normalizedAngle / segmentAngle) % activeList.length;
+            // 回転中のリストハイライト同期
+            const normalizedAngle = currentAnimAngle % 360;
+            const effectiveAngle = (360 - normalizedAngle) % 360;
+            const currentIndex = Math.floor(effectiveAngle / segmentAngle) % activeList.length;
             const currentItem = activeList[currentIndex];
             
-            document.querySelectorAll('#list li').forEach((li, idx) => {
-                const isMatch = items[idx].id === currentItem.id;
-                li.classList.toggle('highlight', isMatch);
-            });
+            if (currentItem) {
+                document.querySelectorAll('#list li').forEach((li, idx) => {
+                    const isMatch = items[idx].id === currentItem.id;
+                    if (!li.classList.contains('final-highlight')) {
+                        li.classList.toggle('highlight', isMatch);
+                    }
+                });
+            }
 
             if (t < 1) {
                 requestAnimationFrame(animate);
             } else {
                 angle = finalAngle;
                 const originalIndex = items.findIndex(i => i.id === winner.id);
-                
                 const descHtml = winner.desc ? `<div class="winner-desc">${winner.desc}</div>` : '';
                 document.getElementById('selectedItem').innerHTML = `<div>${winner.text}（番号: ${originalIndex + 1}）</div>${descHtml}`;
                 
                 addHistory(winner.text, originalIndex + 1, winner.desc);
                 lastWinnerId = winner.id;
+                currentSessionWinners.push(winner.id);
                 
                 if (removeAfter) winner.active = false;
-                updateUI();
+                updateUI(); // ここでハイライト確定（inactiveにはしない）
                 
                 resolve();
             }
