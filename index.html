@@ -85,7 +85,7 @@
         justify-content: center;
         align-items: flex-start;
         width: 100%;
-        max-width: 1300px; /* サイドバー拡張に合わせて少しコンテナも広げる */
+        max-width: 1300px;
         gap: 20px;
         position: relative;
         z-index: 10;
@@ -113,7 +113,7 @@
        3. サイドバー: リスト & 履歴 (Sidebar)
        ========================================================================== */
     #itemList, #history {
-        width: 340px; /* 【変更】幅を広げてリストを見やすく */
+        width: 340px;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: 12px;
@@ -190,12 +190,10 @@
     .inactive .item-text { color: var(--border-color); text-decoration: line-through; }
 
     /* --- 当たり（Jackpot）設定のスタイル --- */
-    /* 【変更】枠線と囲みエフェクトを削除 */
     .jackpot-item {
-        /* box-shadow, border を削除しシンプルに */
     }
     .jackpot-item .item-text {
-        color: var(--danger-color); /* テキスト色は赤のまま強調 */
+        color: var(--danger-color);
         font-weight: bold;
     }
     
@@ -205,7 +203,6 @@
         transition: color 0.3s, transform 0.2s;
         font-size: 1.2em;
     }
-    /* 【変更】★アイコンを赤色、発光も赤系に変更 */
     .star-btn.is-active {
         color: var(--danger-color); 
         transform: scale(1.2);
@@ -546,7 +543,7 @@ const TEXT_CONFIG = {
         titlePlaceholder: "タイトルを入力"
     },
     tooltips: {
-        jackpot: "当たり設定: 当選時にファンファーレと演出が発動",
+        jackpot: "当たり設定",
         trash: "削除",
         remove: "外す",
         restore: "戻す",
