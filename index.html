@@ -4,30 +4,31 @@
 <meta charset="UTF-8">
 <!-- スマホ対応: ビューポート設定 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>stylish roulette</title>
+<title>stylish roulette + jackpot</title>
 <style>
     /* ==========================================================================
        1. デザイン変数 (Color Theme)
        ========================================================================== */
     :root {
         /* ライトモード定義 */
-        --bg-color: #f2f2f7;           /* 背景: ライトグレー */
-        --card-bg: #ffffff;            /* カード: 白 */
-        --text-color: #1c1c1e;         /* 文字: 黒 */
+        --bg-color: #f2f2f7;           /* 背景 */
+        --card-bg: #ffffff;            /* カード */
+        --text-color: #1c1c1e;         /* 文字 */
         
-        --input-bg: #e5e5ea;           /* 入力欄: 背景より少し濃く（凹み表現） */
-        --input-border: #d1d1d6;       /* 枠線 */
+        --input-bg: #e5e5ea;
+        --input-border: #d1d1d6;
 
-        --btn-primary-bg: #1c1c1e;     /* ボタン: 黒（高コントラスト） */
+        --btn-primary-bg: #1c1c1e;
         --btn-primary-text: #ffffff;
 
         --border-color: #d1d1d6;
-        --highlight-color: #e5e5ea;    /* リストハイライト */
-        --accent-color: #8e8e93;       /* フォーカス時アクセント */
+        --highlight-color: #e5e5ea;
+        --accent-color: #8e8e93;
         
-        --final-bg: #3a3a3c;           /* 決定時の背景 */
-        --final-text: #f2f2f7;         /* 決定時の文字 */
-        --danger-color: #ff3b30;       /* 警告色 */
+        --final-bg: #3a3a3c;
+        --final-text: #f2f2f7;
+        --danger-color: #ff3b30;       /* 赤（当たり・警告） */
+        --jackpot-glow: rgba(255, 59, 48, 0.6); /* 当たりの発光色 */
         --shadow-color: rgba(0, 0, 0, 0.1);
         
         --lightning-color: #007aff;    /* 高速モード（青） */
@@ -37,14 +38,14 @@
 
     body.dark {
         /* ダークモード定義 */
-        --bg-color: #1c1c1e;           /* 背景: 黒に近いグレー */
-        --card-bg: #2c2c2e;            /* カード: ダークグレー */
-        --text-color: #f2f2f7;         /* 文字: 白 */
+        --bg-color: #1c1c1e;
+        --card-bg: #2c2c2e;
+        --text-color: #f2f2f7;
         
-        --input-bg: #151515;           /* 入力欄: ほぼ黒（凹み表現） */
+        --input-bg: #151515;
         --input-border: #3a3a3c;
 
-        --btn-primary-bg: #e5e5ea;     /* ボタン: シルバー */
+        --btn-primary-bg: #e5e5ea;
         --btn-primary-text: #1c1c1e;
 
         --border-color: #48484a;
@@ -53,10 +54,11 @@
         
         --final-bg: #d1d1d6;
         --final-text: #1c1c1e;
-        --danger-color: #ff453a;
+        --danger-color: #ff453a;       /* ダークモード用赤 */
+        --jackpot-glow: rgba(255, 69, 58, 0.6);
         --shadow-color: rgba(0, 0, 0, 0.5);
 
-        --lightning-color: #4da3ff;    /* 高速モード（水色） */
+        --lightning-color: #4da3ff;
         --tooltip-bg: rgba(240, 240, 240, 0.95);
         --tooltip-text: #1c1c1e;
     }
@@ -76,16 +78,17 @@
         transition: background 0.3s, color 0.3s;
         min-height: 100vh;
         box-sizing: border-box;
+        overflow-x: hidden;
     }
     .container {
         display: flex;
         justify-content: center;
         align-items: flex-start;
         width: 100%;
-        max-width: 1200px;
+        max-width: 1300px; /* サイドバー拡張に合わせて少しコンテナも広げる */
         gap: 20px;
         position: relative;
-        z-index: 1;
+        z-index: 10;
     }
     .main {
         text-align: center;
@@ -96,14 +99,21 @@
         align-items: center;
         min-width: 0;
         width: 100%;
-        z-index: 2;
+        z-index: 20;
+    }
+
+    /* コンフェッティ用キャンバス */
+    #confetti-canvas {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none !important;
+        z-index: 9999;
     }
 
     /* ==========================================================================
        3. サイドバー: リスト & 履歴 (Sidebar)
        ========================================================================== */
     #itemList, #history {
-        width: 280px;
+        width: 340px; /* 【変更】幅を広げてリストを見やすく */
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: 12px;
@@ -116,6 +126,7 @@
         box-shadow: 0 4px 12px var(--shadow-color);
         box-sizing: border-box;
         flex-shrink: 0;
+        z-index: 30;
     }
     #list, #historyList {
         list-style: none;
@@ -127,7 +138,6 @@
         overflow-x: hidden;
         min-height: 150px;
     }
-    /* スクロールバー装飾 */
     #itemList::-webkit-scrollbar, #history::-webkit-scrollbar,
     #list::-webkit-scrollbar, #historyList::-webkit-scrollbar { width: 6px; }
     #itemList::-webkit-scrollbar-thumb, #history::-webkit-scrollbar-thumb,
@@ -145,7 +155,7 @@
     #itemList li, #historyList li {
         padding: 10px 4px; border-bottom: 1px solid var(--border-color);
         display: flex; align-items: center; gap: 8px; position: relative;
-        list-style: none; flex-shrink: 0; transition: background 0.1s;
+        list-style: none; flex-shrink: 0; transition: background 0.1s, box-shadow 0.3s;
     }
     #itemList li:last-child { border-bottom: none; }
     
@@ -178,6 +188,29 @@
     
     /* 無効状態 */
     .inactive .item-text { color: var(--border-color); text-decoration: line-through; }
+
+    /* --- 当たり（Jackpot）設定のスタイル --- */
+    /* 【変更】枠線と囲みエフェクトを削除 */
+    .jackpot-item {
+        /* box-shadow, border を削除しシンプルに */
+    }
+    .jackpot-item .item-text {
+        color: var(--danger-color); /* テキスト色は赤のまま強調 */
+        font-weight: bold;
+    }
+    
+    /* ★ボタン */
+    .star-btn {
+        color: var(--border-color); 
+        transition: color 0.3s, transform 0.2s;
+        font-size: 1.2em;
+    }
+    /* 【変更】★アイコンを赤色、発光も赤系に変更 */
+    .star-btn.is-active {
+        color: var(--danger-color); 
+        transform: scale(1.2);
+        filter: drop-shadow(0 0 2px var(--jackpot-glow));
+    }
 
     /* ==========================================================================
        4. ルーレット & タイトルエリア
@@ -213,8 +246,8 @@
         position: relative; width: 100%; max-width: 360px; aspect-ratio: 1 / 1;
         height: auto; margin: 0 auto;
         border-radius: 50%; box-shadow: 0 12px 30px var(--shadow-color);
-        flex-shrink: 0; cursor: pointer; transition: transform 0.1s;
-        z-index: 5;
+        flex-shrink: 0; cursor: pointer; transition: transform 0.1s, box-shadow 0.3s;
+        z-index: 25;
     }
     .roulette-wrapper:active { transform: scale(0.98); }
     .roulette-wrapper::after {
@@ -223,6 +256,16 @@
         background: var(--card-bg); border: 4px solid var(--text-color);
         border-radius: 50%; z-index: 10; pointer-events: none;
     }
+    
+    /* 当たり当選時の発光エフェクト */
+    .roulette-wrapper.jackpot-win {
+        animation: jackpot-pulse 0.5s infinite alternate;
+    }
+    @keyframes jackpot-pulse {
+        0% { box-shadow: 0 0 20px var(--danger-color); }
+        100% { box-shadow: 0 0 60px var(--danger-color), 0 0 100px var(--jackpot-glow); }
+    }
+
     #roulette {
         width: 100%; height: 100%;
         transform: rotate(0deg); filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
@@ -242,7 +285,8 @@
     .controls {
         display: flex; flex-direction: column; align-items: center; gap: 16px;
         margin-top: 30px; width: 100%; max-width: 500px;
-        position: relative; z-index: 50;
+        position: relative; 
+        z-index: 100;
     }
     .input-group, .action-group, .file-group, .setting-group {
         display: flex; justify-content: center; gap: 10px; width: 100%;
@@ -251,70 +295,52 @@
     .file-area { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 6px; }
     .setting-group { align-items: center; justify-content: center; gap: 12px; }
     
-    /* --- 共通スタイル: 高さ・角丸 --- */
     button, .custom-file-btn, .input-group input[type="text"], .spin-count-wrapper, .file-input-wrapper {
-        height: 48px; /* 全要素の高さ */
-        border-radius: 8px; /* 角丸 */
-        box-sizing: border-box;
+        height: 48px; border-radius: 8px; box-sizing: border-box;
     }
 
-    /* --- 入力欄 (Input) --- */
     .input-group input[type="text"] {
         flex: 1; padding: 0 12px; font-size: 16px;
         background: var(--input-bg); 
         color: var(--text-color);
         border: 1px solid var(--input-border);
-        /* 2つ並べるために最小幅を調整 */
         min-width: 110px; 
         outline: none; transition: border-color 0.2s;
     }
     .input-group input[type="text"]:focus { border-color: var(--accent-color); }
 
-    /* --- ボタン共通 (Base Button) --- */
     button, .custom-file-btn {
         font-size: 15px; font-weight: 600;
         display: inline-flex; align-items: center; justify-content: center;
         cursor: pointer; position: relative; transition: all 0.2s; z-index: 10;
-        touch-action: manipulation;
-        opacity: 0.8;
+        touch-action: manipulation; opacity: 0.8;
     }
     button:hover, .custom-file-btn:hover { opacity: 1; transform: translateY(-1px); }
     button:active, .custom-file-btn:active { transform: translateY(1px); opacity: 1; }
 
-    /* --- Primary Button --- */
     button.primary-btn, #btnAdd, .custom-file-btn, #btnExport, #btnShare {
         background: var(--btn-primary-bg); color: var(--btn-primary-text);
         border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
     }
 
-    /* --- ファイル選択ボタン (不具合対策済み) --- */
     .file-input-wrapper {
         flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
         cursor: pointer; min-width: 120px; overflow: hidden;
-        border: none; padding: 0; background: transparent;
-        z-index: 20;
+        border: none; padding: 0; background: transparent; z-index: 20;
     }
     #fileInput { 
-        display: block !important; 
-        position: absolute; top: 0; left: 0; 
-        width: 100% !important; height: 100% !important; 
-        opacity: 0 !important; 
-        z-index: 100; /* 最前面 */
-        cursor: pointer;
-        appearance: none; -webkit-appearance: none;
+        display: block !important; position: absolute; top: 0; left: 0; 
+        width: 100% !important; height: 100% !important; opacity: 0 !important; 
+        z-index: 100; cursor: pointer;
     }
     .custom-file-btn { 
-        width: 100%; height: 100%;
-        pointer-events: none !important; 
-        z-index: 1;
+        width: 100%; height: 100%; pointer-events: none !important; z-index: 1;
     }
 
-    /* --- ボタン幅調整（シェアボタンを追加） --- */
     #btnAdd, #btnExport, #btnShare { width: 80px; flex: 0 0 80px; }
     #btnExport svg, #btnShare svg { width: 22px; height: 22px; fill: currentColor; }
     .action-group button { flex: 1; min-width: 140px; }
 
-    /* --- サブ操作ボタン (Outline) --- */
     button.clear-btn {
         background: transparent; border: 1px solid var(--danger-color);
         color: var(--danger-color); box-shadow: none;
@@ -324,7 +350,6 @@
         box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
     }
 
-    /* --- 高速モードボタン --- */
     #fastModeBtn {
         width: 48px; height: 48px;
         background: transparent; border: 1px solid transparent;
@@ -337,7 +362,6 @@
     }
     button.icon-only svg { width: 24px; height: 24px; fill: currentColor; }
 
-    /* --- 回数入力 --- */
     .spin-count-wrapper {
         display: flex; align-items: center; gap: 8px;
         background: var(--card-bg); padding: 0 12px;
@@ -359,7 +383,7 @@
     }
     .icon-btn {
         background: none; border: none; padding: 8px; height: auto;
-        font-size: 18px; color: var(--text-color); opacity: 0.6; 
+        font-size: 18px; color: var(--text-color); opacity: 0.6; cursor: pointer;
     }
     .icon-btn.trash-btn:hover { color: var(--danger-color); }
     .icon-btn:hover { opacity: 1; transform: scale(1.1); background: none; }
@@ -376,7 +400,6 @@
         backdrop-filter: blur(4px); white-space: nowrap; font-weight: 500; max-width: 90vw; 
     }
 
-    /* トースト通知 */
     .toast-notification {
         position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
         background: var(--tooltip-bg); color: var(--tooltip-text);
@@ -405,12 +428,12 @@
     .fixed-btn svg { fill: currentColor; width: 100%; height: 100%; }
 
     #darkModeBtn { right: 15px; }
-    #muteBtn { right: 70px; } /* ダークモードボタンの左隣 */
+    #muteBtn { right: 70px; } 
     
     #muteBtn.muted svg path.sound-wave { display: none; }
     #muteBtn.muted svg path.mute-x { display: block; }
     #muteBtn:not(.muted) svg path.mute-x { display: none; }
-    #muteBtn.muted .mute-x { display: block; } /* グループ用 */
+    #muteBtn.muted .mute-x { display: block; }
 
     @media (max-width: 900px) {
         .container { flex-direction: column; align-items: center; gap: 30px; }
@@ -423,13 +446,12 @@
 </style>
 </head>
 <body class="dark">
+<canvas id="confetti-canvas"></canvas>
 
-<!-- デフォルトミュート状態 (.muted クラス付与) -->
 <button id="muteBtn" class="fixed-btn muted" title="ミュート解除" data-tooltip="効果音のオン/オフ">
     <svg viewBox="0 0 24 24">
         <path d="M3 9v6h4l5 5V4L7 9H3z"/>
         <path class="sound-wave" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-        <!-- ミュート時のバツ印 -->
         <g class="mute-x" style="display:none">
              <path d="M16 16l4-4m0 0l-4-4m4 4l-4 4m4-4l-4-4" stroke="currentColor" stroke-width="2" />
         </g>
@@ -462,7 +484,6 @@
         
         <!-- 操作パネル -->
         <div class="controls">
-            <!-- 変更点: 入力グループに詳細テキスト用Inputを追加 -->
             <div class="input-group">
                 <input type="text" id="itemInput" placeholder="項目名">
                 <input type="text" id="itemDescInput" placeholder="詳細(任意)">
@@ -471,7 +492,6 @@
             
             <div class="file-area">
                 <div class="file-group">
-                    <!-- labelタグでinputを包むことでクリック判定を保証 -->
                     <label class="file-input-wrapper" id="dropZone" data-tooltip="TXT:リストの一括追加 / CSV:状態を復元">
                         <input type="file" id="fileInput" accept=".csv,.txt" title="">
                         <div class="custom-file-btn" id="btnFileSelect">ファイル選択</div>
@@ -516,6 +536,7 @@
 </div>
 
 <script>
+// --- 設定定数 ---
 const TEXT_CONFIG = {
     titles: {
         pageTitle: "stylish roulette",
@@ -524,20 +545,11 @@ const TEXT_CONFIG = {
         defaultInputTitle: "ルーレット",
         titlePlaceholder: "タイトルを入力"
     },
-    buttons: {
-        add: "追加",
-        fileSelect: "ファイル選択",
-        start: "START",
-        startRemove: "START & REMOVE",
-        clear: "CLEAR",
-        reset: "RESET"
-    },
-    inputs: { 
-        itemPlaceholder: "項目名", 
-        descPlaceholder: "詳細テキスト(任意)" // 追加
-    },
-    labels: { spinCount: "連続回数:" },
     tooltips: {
+        jackpot: "当たり設定: 当選時にファンファーレと演出が発動",
+        trash: "削除",
+        remove: "外す",
+        restore: "戻す",
         dropZone: "TXT:リストの一括追加 / CSV:状態を復元",
         export: "現在の状態をCSV保存",
         share: "現在の状態をURLで共有",
@@ -547,9 +559,6 @@ const TEXT_CONFIG = {
         startRemove: "抽選結果を除外する",
         clear: "初期状態に戻す",
         reset: "抽選開始前に戻す",
-        trash: "削除",
-        remove: "外す",
-        restore: "戻す",
         mute: "効果音のオン/オフ"
     },
     messages: {
@@ -563,23 +572,24 @@ const TEXT_CONFIG = {
         shareError: "URLが長すぎるなどの理由でコピーできませんでした。"
     },
     sampleData: [
-        { text: "りんご", desc: "赤い果物。医者いらず。" },
-        { text: "バナナ", desc: "黄色い果物。エネルギー補給に最適。" },
-        { text: "ぶどう", desc: "紫の果物。ポリフェノールたっぷり。" }
+        { text: "りんご", desc: "赤い果物。医者いらず。", jackpot: false },
+        { text: "★大当たり", desc: "おめでとう！", jackpot: true }
     ]
 };
 
 // --- サウンド管理オブジェクト ---
 const SoundManager = {
     ctx: null,
-    isMuted: true, // デフォルトでミュート
+    isMuted: true,
     init() {
         if (!this.ctx) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContext();
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+            } catch(e) { console.error("AudioContext error:", e); }
         }
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume();
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume().catch(e => console.log(e));
         }
     },
     toggleMute() {
@@ -591,38 +601,133 @@ const SoundManager = {
         } else {
             btn.classList.remove('muted');
             btn.setAttribute('title', 'ミュートする');
-            // 解除時に短く鳴らして確認
             this.init();
             this.playClick();
         }
     },
     playClick() {
         if (this.isMuted || !this.ctx) return;
-        const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(880, t);
-        gain.gain.setValueAtTime(0.025, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.05);
+        try {
+            const t = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, t);
+            gain.gain.setValueAtTime(0.025, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.05);
+        } catch(e) {}
     },
     playBell() {
         if (this.isMuted || !this.ctx) return;
-        const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine'; 
-        osc.frequency.setValueAtTime(2000, t); 
-        gain.gain.setValueAtTime(0.1, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5); 
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 1.5);
+        try {
+            const t = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(2000, t); 
+            gain.gain.setValueAtTime(0.1, t);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5); 
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(t);
+            osc.stop(t + 1.5);
+        } catch(e) {}
+    },
+    playFanfare() {
+        if (this.isMuted || !this.ctx) return;
+        try {
+            const t = this.ctx.currentTime;
+            const notes = [523.25, 659.25, 783.99, 1046.50]; 
+            const times = [0, 0.1, 0.2, 0.3];
+            const durations = [0.1, 0.1, 0.1, 0.8];
+            notes.forEach((freq, i) => {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(freq, t + times[i]);
+                gain.gain.setValueAtTime(0.0, t + times[i]);
+                gain.gain.linearRampToValueAtTime(0.1, t + times[i] + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + times[i] + durations[i]);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(t + times[i]);
+                osc.stop(t + times[i] + durations[i]);
+            });
+        } catch(e) {}
+    }
+};
+
+// --- コンフェッティ（紙吹雪） ---
+const Confetti = {
+    canvas: null,
+    ctx: null,
+    particles: [],
+    animationId: null,
+    init() {
+        this.canvas = document.getElementById('confetti-canvas');
+        if(!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+    },
+    resize() {
+        if(this.canvas) {
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+        }
+    },
+    start() {
+        if(!this.canvas) this.init();
+        if(!this.canvas) return;
+        this.particles = [];
+        for (let i = 0; i < 150; i++) {
+            this.particles.push({
+                x: Math.random() * this.canvas.width,
+                y: Math.random() * this.canvas.height - this.canvas.height,
+                w: Math.random() * 10 + 5,
+                h: Math.random() * 10 + 5,
+                dx: Math.random() * 4 - 2,
+                dy: Math.random() * 3 + 2,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                rotation: Math.random() * 360,
+                dRotation: Math.random() * 10 - 5
+            });
+        }
+        if (!this.animationId) this.animate();
+        setTimeout(() => this.stop(), 5000);
+    },
+    stop() {
+        this.particles = [];
+        if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+            if(this.ctx) this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+    },
+    animate() {
+        if(!this.ctx) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.particles.forEach((p, i) => {
+            p.y += p.dy;
+            p.x += p.dx;
+            p.rotation += p.dRotation;
+            this.ctx.save();
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate(p.rotation * Math.PI / 180);
+            this.ctx.fillStyle = p.color;
+            this.ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            this.ctx.restore();
+            if (p.y > this.canvas.height) this.particles.splice(i, 1);
+        });
+        if (this.particles.length > 0) {
+            this.animationId = requestAnimationFrame(() => this.animate());
+        } else {
+            this.animationId = null;
+        }
     }
 };
 
@@ -636,21 +741,32 @@ let lastModeRemove = false;
 let isSpinning = false;
 let isFastMode = false;
 
+// --- 初期化処理 (エラーハンドリング付き) ---
 document.addEventListener('DOMContentLoaded', () => { 
-    restoreFromShareURL();
-    applyUIStrings(); 
-    if(items.length === 0) renderRoulette();
-    initTooltip(); 
-    
-    document.querySelector('.roulette-wrapper').addEventListener('click', () => {
-        startRoulette(lastModeRemove);
-    });
+    try {
+        Confetti.init();
+        initTooltip();
+        try { restoreFromShareURL(); } catch(e) { console.warn("Restore URL failed:", e); }
+        applyUIStrings(); 
+        if(items.length === 0) renderRoulette();
+        const wrapper = document.querySelector('.roulette-wrapper');
+        if(wrapper) {
+            wrapper.addEventListener('click', () => startRoulette(lastModeRemove));
+        }
+    } catch(err) {
+        console.error("Initialization error:", err);
+    }
 });
 
-document.getElementById('muteBtn').addEventListener('click', () => {
-    SoundManager.toggleMute();
+document.getElementById('muteBtn').addEventListener('click', () => SoundManager.toggleMute());
+document.getElementById('darkModeBtn').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    renderRoulette();
 });
+document.getElementById('itemInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+document.getElementById('itemDescInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
+// --- 機能関数 ---
 function applyUIStrings() {
     document.title = TEXT_CONFIG.titles.pageTitle;
     document.getElementById('txtListHeader').textContent = TEXT_CONFIG.titles.listHeader;
@@ -658,35 +774,7 @@ function applyUIStrings() {
     const titleInput = document.getElementById('titleInput');
     if(titleInput.value === "ルーレット" || titleInput.value === "") titleInput.value = TEXT_CONFIG.titles.defaultInputTitle;
     titleInput.placeholder = TEXT_CONFIG.titles.titlePlaceholder;
-    document.getElementById('itemInput').placeholder = TEXT_CONFIG.inputs.itemPlaceholder;
-    document.getElementById('itemDescInput').placeholder = TEXT_CONFIG.inputs.descPlaceholder; // 追加
-    document.getElementById('btnAdd').textContent = TEXT_CONFIG.buttons.add;
-    document.getElementById('btnFileSelect').textContent = TEXT_CONFIG.buttons.fileSelect;
-    document.getElementById('txtSpinCount').textContent = TEXT_CONFIG.labels.spinCount;
-    document.getElementById('spinCountWrapper').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.spinCount);
-    document.getElementById('fastModeBtn').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.fastMode);
-    document.getElementById('btnStart').textContent = TEXT_CONFIG.buttons.start;
-    document.getElementById('btnStart').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.start);
-    document.getElementById('btnStartRemove').textContent = TEXT_CONFIG.buttons.startRemove;
-    document.getElementById('btnStartRemove').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.startRemove);
-    document.getElementById('btnClear').textContent = TEXT_CONFIG.buttons.clear;
-    document.getElementById('btnClear').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.clear);
-    document.getElementById('btnReset').textContent = TEXT_CONFIG.buttons.reset;
-    document.getElementById('btnReset').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.reset);
-    document.getElementById('dropZone').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.dropZone);
-    document.getElementById('btnExport').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.export);
-    document.getElementById('btnShare').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.share);
-    document.getElementById('muteBtn').setAttribute('data-tooltip', TEXT_CONFIG.tooltips.mute);
 }
-
-document.getElementById('darkModeBtn').addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    renderRoulette();
-});
-
-// イベントリスナーの追加（詳細テキスト入力でもEnterで追加可能に）
-document.getElementById('itemInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
-document.getElementById('itemDescInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
 function initTooltip() {
     const existing = document.getElementById('global-tooltip');
@@ -703,9 +791,7 @@ function initTooltip() {
     });
     document.addEventListener('mouseout', (e) => {
         const target = e.target.closest('[data-tooltip]');
-        if (target) {
-            tooltip.style.opacity = '0';
-        }
+        if (target) tooltip.style.opacity = '0';
     });
     document.addEventListener('mousemove', (e) => {
         if (tooltip.style.opacity === '1') {
@@ -723,16 +809,11 @@ function initTooltip() {
 function showToast(message) {
     const existing = document.querySelector('.toast-notification');
     if (existing) existing.remove();
-
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     toast.textContent = message;
     document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-        toast.classList.add('show');
-    });
-
+    requestAnimationFrame(() => toast.classList.add('show'));
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
@@ -753,22 +834,20 @@ function toggleFastMode() {
     renderRoulette();
 }
 
-// 変更点: addItem関数で詳細テキストも取得するように修正
 function addItem(text = null) {
     const inputName = document.getElementById('itemInput');
     const inputDesc = document.getElementById('itemDescInput');
     
-    const val = text || inputName.value.trim();
-    // プログラムから呼ばれた場合(textがある場合)はdescは空、手入力の場合はinputDescから取得
-    const desc = text ? '' : inputDesc.value.trim();
+    const val = text || (inputName ? inputName.value.trim() : "");
+    const desc = text ? '' : (inputDesc ? inputDesc.value.trim() : "");
 
     if (!val) return;
     
-    items.push({ id: idCounter++, text: val, active: true, desc: desc });
+    items.push({ id: idCounter++, text: val, active: true, desc: desc, isJackpot: false });
     
-    if (!text) {
+    if (!text && inputName) {
         inputName.value = '';
-        inputDesc.value = '';
+        if(inputDesc) inputDesc.value = '';
         inputName.focus();
     }
     updateUI();
@@ -780,13 +859,11 @@ function loadAndProcessFile(file) {
     const reader = new FileReader();
     reader.onload = ev => {
         const content = ev.target.result;
-        // Check for header including 'Type'
         if (content.startsWith('Type,') || content.includes('Type,')) {
             restoreFromCSV(content);
         } else {
             content.split(/\r?\n/).filter(line => line.trim()).forEach(line => {
-                // テキストファイル読み込み時は詳細テキストは空で追加
-                items.push({ id: idCounter++, text: line, active: true, desc: '' });
+                items.push({ id: idCounter++, text: line, active: true, desc: '', isJackpot: false });
             });
             updateUI();
         }
@@ -795,8 +872,10 @@ function loadAndProcessFile(file) {
 }
 
 document.getElementById('fileInput').addEventListener('change', e => {
-    loadAndProcessFile(e.target.files[0]);
-    e.target.value = ''; 
+    if(e.target.files && e.target.files.length > 0) {
+        loadAndProcessFile(e.target.files[0]);
+        e.target.value = ''; 
+    }
 });
 
 const dropZone = document.getElementById('dropZone');
@@ -809,7 +888,6 @@ dropZone.addEventListener('drop', e => {
 
 function exportCSV() {
     const csvContent = [];
-    // Header format: Type, Text, Value1(Active/Number), Value2(Timestamp/Empty), Description
     csvContent.push('Type,Text,Value1,Value2,Description');
     const title = document.getElementById('titleInput').value.replace(/"/g, '""');
     csvContent.push(`Title,"${title}",,,`);
@@ -817,17 +895,15 @@ function exportCSV() {
     if (items.length === 0) {
         if (!confirm(TEXT_CONFIG.messages.emptySample)) return;
         TEXT_CONFIG.sampleData.forEach(d => {
-            csvContent.push(`Item,"${d.text}",1,,"${d.desc}"`);
+            csvContent.push(`Item,"${d.text}",1,${d.jackpot?1:0},"${d.desc}"`);
         });
     } else {
-        // Items: Value1=Active(1/0), Value2=Empty
         items.forEach(i => {
             const text = `"${i.text.replace(/"/g, '""')}"`;
             const desc = i.desc ? `"${i.desc.replace(/"/g, '""')}"` : '""';
-            csvContent.push(`Item,${text},${i.active ? 1 : 0},,${desc}`);
+            csvContent.push(`Item,${text},${i.active ? 1 : 0},${i.isJackpot ? 1 : 0},${desc}`);
         });
         
-        // History: Value1=Number, Value2=Timestamp
         const historyLis = document.querySelectorAll('#historyList li');
         historyLis.forEach(li => {
             const textRaw = li.textContent.split('（番号:')[0] || li.textContent;
@@ -838,14 +914,6 @@ function exportCSV() {
             const desc = `"${rawDesc.replace(/"/g, '""')}"`;
             csvContent.push(`History,${text},${num},${time},${desc}`);
         });
-
-        if (lastWinnerId !== null) {
-            const winnerItem = items.find(i => i.id === lastWinnerId);
-            if (winnerItem) {
-                const text = `"${winnerItem.text.replace(/"/g, '""')}"`;
-                csvContent.push(`Winner,${text},,,`);
-            }
-        }
     }
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent.join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -864,15 +932,19 @@ async function shareCurrentState() {
     const title = document.getElementById('titleInput').value;
     const saveData = {
         t: title,
-        i: items.map(item => ({ t: item.text, a: item.active ? 1 : 0, d: item.desc }))
+        i: items.map(item => ({ t: item.text, a: item.active ? 1 : 0, d: item.desc, j: item.isJackpot ? 1 : 0 }))
     };
     try {
         const jsonStr = JSON.stringify(saveData);
         const base64Params = btoa(unescape(encodeURIComponent(jsonStr)));
         const url = new URL(window.location.href);
         url.searchParams.set('data', base64Params);
-        await navigator.clipboard.writeText(url.toString());
-        showToast(TEXT_CONFIG.messages.shareSuccess);
+        if(navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(url.toString());
+            showToast(TEXT_CONFIG.messages.shareSuccess);
+        } else {
+            prompt("以下のURLをコピーしてください:", url.toString());
+        }
     } catch (e) {
         console.error(e);
         showToast(TEXT_CONFIG.messages.shareError);
@@ -892,11 +964,19 @@ function restoreFromShareURL() {
             items = [];
             idCounter = 0;
             savedData.i.forEach(item => {
-                items.push({ id: idCounter++, text: item.t, active: item.a === 1, desc: item.d || '' });
+                items.push({ 
+                    id: idCounter++, 
+                    text: item.t, 
+                    active: item.a === 1, 
+                    desc: item.d || '',
+                    isJackpot: item.j === 1 
+                });
             });
             document.getElementById('historyList').innerHTML = '';
             document.getElementById('selectedItem').innerHTML = '';
-            window.history.replaceState(null, '', window.location.pathname);
+            try {
+                window.history.replaceState(null, '', window.location.pathname);
+            } catch(e) {}
             updateUI();
         }
     } catch (e) { console.error("Failed to restore from URL", e); }
@@ -937,32 +1017,18 @@ function restoreFromCSV(csvText) {
         
         if (type === 'Item') {
             const isActive = parseInt(cols[2]) === 1;
-            const desc = cols[4] !== undefined ? cols[4] : (cols[3] || '');
-            items.push({ id: idCounter++, text: text, active: isActive, desc: desc });
+            const isJackpot = parseInt(cols[3]) === 1;
+            const desc = cols[4] !== undefined ? cols[4] : '';
+            items.push({ id: idCounter++, text: text, active: isActive, desc: desc, isJackpot: !!isJackpot });
 
         } else if (type === 'History') {
             const num = cols[2];
             const time = cols[3];
-            const desc = cols[4] !== undefined ? cols[4] : (cols[3] || '');
-            
-            // 復元時に、現在の items 配列から同名の項目を探してIDをリンクする
-            // これにより、復元後の並び替えに履歴の番号が追従できるようになる
+            const desc = cols[4] !== undefined ? cols[4] : '';
             let linkedItemId = null;
             const matchingItem = items.find(i => i.text === text);
-            if (matchingItem) {
-                linkedItemId = matchingItem.id;
-            }
-            
+            if (matchingItem) linkedItemId = matchingItem.id;
             addHistory(text, num, desc, time, linkedItemId);
-
-        } else if (type === 'Winner') {
-            setTimeout(() => {
-                const winnerItem = items.find(i => i.text === text);
-                if (winnerItem) {
-                    lastWinnerId = winnerItem.id;
-                    updateUI(); 
-                }
-            }, 0);
 
         } else if (type === 'Title') {
             document.getElementById('titleInput').value = text;
@@ -975,41 +1041,42 @@ function updateUI() {
     renderList();
     renderRoulette();
 
-    // 1. 画面中央の当選結果番号の更新
     if (lastWinnerId !== null) {
         const winnerItem = items.find(i => i.id === lastWinnerId);
         if (winnerItem) {
             const currentNumber = items.indexOf(winnerItem) + 1;
             const descHtml = winnerItem.desc ? `<div class="winner-desc">${winnerItem.desc}</div>` : '';
             document.getElementById('selectedItem').innerHTML = `<div>${winnerItem.text}（番号: ${currentNumber}）</div>${descHtml}`;
+            
+            const wrapper = document.querySelector('.roulette-wrapper');
+            if (winnerItem.isJackpot) {
+                wrapper.classList.add('jackpot-win');
+            } else {
+                wrapper.classList.remove('jackpot-win');
+            }
         } else {
             document.getElementById('selectedItem').innerHTML = '';
             lastWinnerId = null;
+            document.querySelector('.roulette-wrapper').classList.remove('jackpot-win');
         }
+    } else {
+        document.querySelector('.roulette-wrapper').classList.remove('jackpot-win');
     }
-
-    // 2. 履歴リスト内番号の更新
     updateHistoryNumbers();
 }
 
-// 履歴リスト内の番号を、現在の items 順序に合わせて書き換える関数
 function updateHistoryNumbers() {
     const listItems = document.querySelectorAll('#historyList li');
     listItems.forEach(li => {
         const itemId = li.dataset.itemId;
         if (itemId !== undefined && itemId !== null) {
-            // 現在のリスト内でのインデックスを探す
-            // dataset.itemId は文字列なので型変換に注意 (items[].id は数値)
             const currentIdx = items.findIndex(i => i.id == itemId);
-            
             if (currentIdx !== -1) {
                 const newNum = currentIdx + 1;
-                // 現在のテキストから項目名部分を抽出（"〇〇（番号: x）..." の前まで）
                 const textPart = li.textContent.split('（番号:')[0];
                 const time = li.dataset.timestamp || '';
-                
                 li.textContent = `${textPart}（番号: ${newNum}） (${time})`;
-                li.dataset.number = newNum; // CSV保存用データ属性も更新
+                li.dataset.number = newNum;
             }
         }
     });
@@ -1035,10 +1102,12 @@ function resetStatus() {
         items.forEach(i => i.active = true);
         lastWinnerId = null;
         currentSessionWinners = [];
+        Confetti.stop();
         updateUI();
     }
 }
 
+// DnD handlers
 function handleDragStart(e) {
     if(e.target.tagName.toLowerCase() === 'button' || e.target.closest('button')) {
         e.preventDefault(); return;
@@ -1057,10 +1126,12 @@ function handleDrop(e) {
     if (dragSrcEl !== destEl) {
         const srcIndex = parseInt(dragSrcEl.dataset.index);
         const destIndex = parseInt(destEl.dataset.index);
-        const movedItem = items[srcIndex];
-        items.splice(srcIndex, 1);
-        items.splice(destIndex, 0, movedItem);
-        updateUI(); // 並び替え後にUI更新（履歴番号更新を含む）
+        if(items[srcIndex]) {
+            const movedItem = items[srcIndex];
+            items.splice(srcIndex, 1);
+            items.splice(destIndex, 0, movedItem);
+            updateUI();
+        }
     }
     return false;
 }
@@ -1082,11 +1153,10 @@ function renderList() {
         li.addEventListener('drop', handleDrop, false);
         li.addEventListener('dragend', handleDragEnd, false);
 
-        if (currentSessionWinners.includes(item.id)) {
-            li.classList.add('final-highlight');
-        } else if (!item.active) {
-            li.classList.add('inactive');
-        }
+        if (currentSessionWinners.includes(item.id)) li.classList.add('final-highlight');
+        else if (!item.active) li.classList.add('inactive');
+        
+        if (item.isJackpot) li.classList.add('jackpot-item');
 
         const trashBtn = document.createElement('button');
         trashBtn.className = 'icon-btn trash-btn';
@@ -1099,13 +1169,24 @@ function renderList() {
         span.textContent = `${index + 1}. ${item.text}`;
         if (item.desc) span.setAttribute('data-tooltip', item.desc);
 
+        // ★ボタン
+        const starBtn = document.createElement('button');
+        starBtn.className = `icon-btn star-btn ${item.isJackpot ? 'is-active' : ''}`;
+        starBtn.setAttribute('data-tooltip', TEXT_CONFIG.tooltips.jackpot);
+        starBtn.innerHTML = '★';
+        starBtn.onclick = (e) => {
+            e.stopPropagation();
+            item.isJackpot = !item.isJackpot;
+            updateUI();
+        };
+
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'icon-btn toggle-btn';
         toggleBtn.textContent = item.active ? '✕' : '♻';
         toggleBtn.setAttribute('data-tooltip', item.active ? TEXT_CONFIG.tooltips.remove : TEXT_CONFIG.tooltips.restore);
         toggleBtn.onclick = () => { item.active = !item.active; updateUI(); };
 
-        li.append(trashBtn, span, toggleBtn);
+        li.append(trashBtn, starBtn, span, toggleBtn);
         ul.appendChild(li);
     });
 }
@@ -1133,9 +1214,6 @@ function renderRoulette() {
     const textColor = isDark ? '#fff' : '#333';
 
     activeList.forEach((item, i) => {
-        const ratio = activeList.length > 1 ? i / (activeList.length - 1) : 0;
-        const gray = Math.round(startColor - (startColor - endColor) * ratio);
-        const color = `rgb(${gray},${gray},${gray})`;
         const startA = segmentAngle * i;
         const endA = startA + segmentAngle; 
         const d2r = Math.PI / 180;
@@ -1144,11 +1222,27 @@ function renderRoulette() {
         const x2 = 200 + 190 * Math.cos(endA * d2r);
         const y2 = 200 + 190 * Math.sin(endA * d2r);
         
+        // 【変更】Jackpotでも塗りつぶし色は変えず、通常のグレー階調を使用
+        const ratio = activeList.length > 1 ? i / (activeList.length - 1) : 0;
+        const gray = Math.round(startColor - (startColor - endColor) * ratio);
+        const color = `rgb(${gray},${gray},${gray})`;
+        
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', `M200,200 L${x1},${y1} A190,190 0 ${segmentAngle > 180 ? 1 : 0} 1 ${x2},${y2} Z`);
         path.setAttribute('fill', color);
-        path.setAttribute('stroke', isDark ? '#333' : '#fff');
-        path.setAttribute('stroke-width', '1');
+        
+        // 【変更】Jackpot項目の場合、枠線を赤く太くし、発光させる
+        if(item.isJackpot) {
+            path.setAttribute('stroke', 'var(--danger-color)');
+            path.setAttribute('stroke-width', '4');
+            path.setAttribute('filter', 'drop-shadow(0 0 6px var(--danger-color))');
+            // Z-index的な制御がないため、隣接する細い枠線の上に描画されるとは限らないが、
+            // drop-shadowにより発光感は十分に得られる
+        } else {
+            path.setAttribute('stroke', isDark ? '#333' : '#fff');
+            path.setAttribute('stroke-width', '1');
+        }
+        
         svg.appendChild(path);
 
         if (!isFastMode) {
@@ -1158,7 +1252,11 @@ function renderRoulette() {
             const ty = 200 + textRadius * Math.sin(midAngle * d2r);
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', tx); text.setAttribute('y', ty);
-            text.setAttribute('fill', textColor);
+            // Jackpot時の文字色は白(背景グレー上なので)またはテーマ色に合わせる
+            // 背景がグレーなので、Jackpotでも通常の文字色の方が見やすい場合があるが、
+            // 既存の「Jackpotは特別」感を出すなら赤文字もあり。
+            // ここでは視認性重視で、Jackpot時は赤色文字にする。
+            text.setAttribute('fill', item.isJackpot ? 'var(--danger-color)' : textColor);
             text.setAttribute('font-size', activeList.length > 20 ? '10' : '14'); 
             text.setAttribute('font-weight', 'bold');
             text.setAttribute('text-anchor', 'middle'); 
@@ -1186,6 +1284,7 @@ async function startRoulette(removeAfter) {
     if (isSpinning) return;
     
     SoundManager.init();
+    Confetti.stop();
 
     let count = parseInt(document.getElementById('spinCountInput').value);
     if (isNaN(count) || count < 1) count = 1;
@@ -1202,6 +1301,7 @@ async function startRoulette(removeAfter) {
     updateUI();
 
     if (isFastMode) {
+        // Fast Mode
         const results = [];
         for (let i = 0; i < count; i++) {
             const activeList = items.filter(item => item.active);
@@ -1209,7 +1309,7 @@ async function startRoulette(removeAfter) {
             const randomIndex = Math.floor(Math.random() * activeList.length);
             const winner = activeList[randomIndex];
             currentSessionWinners.push(winner.id);
-            results.push({ text: winner.text, originalIndex: items.findIndex(it => it.id === winner.id) + 1, desc: winner.desc, id: winner.id });
+            results.push(winner);
             if (removeAfter) {
                 const targetItem = items.find(it => it.id === winner.id);
                 if(targetItem) targetItem.active = false;
@@ -1228,7 +1328,6 @@ async function startRoulette(removeAfter) {
             const startTime = performance.now();
             const startAngle = angle;
             const targetAngle = angle - 360 * 10 - Math.random() * 360; 
-            
             let lastSoundTime = 0;
             function animate(time) {
                 const t = Math.min((time - startTime) / duration, 1);
@@ -1247,17 +1346,26 @@ async function startRoulette(removeAfter) {
             requestAnimationFrame(animate);
         });
         
-        SoundManager.playBell();
-
-        results.forEach(res => {
-            addHistory(res.text, res.originalIndex, res.desc, null, res.id);
+        let hasJackpot = false;
+        results.forEach(winner => {
+            const originalIndex = items.findIndex(it => it.id === winner.id) + 1;
+            addHistory(winner.text, originalIndex, winner.desc, null, winner.id);
+            if(winner.isJackpot) hasJackpot = true;
         });
+        
+        if (hasJackpot) {
+            SoundManager.playFanfare();
+            Confetti.start();
+        } else {
+            SoundManager.playBell();
+        }
         
         lastWinnerId = null;
         updateUI(); 
         isSpinning = false;
 
     } else {
+        // Normal Mode
         for (let i = 0; i < count; i++) {
             const currentActive = items.filter(item => item.active);
             if (currentActive.length === 0) {
@@ -1319,19 +1427,23 @@ function spinOnce(activeList, removeAfter) {
                 requestAnimationFrame(animate);
             } else {
                 angle = finalAngle;
-                SoundManager.playBell();
-
+                
                 const originalIndex = items.findIndex(i => i.id === winner.id);
-                // 選択直後のIDを保存
                 lastWinnerId = winner.id;
                 currentSessionWinners.push(winner.id);
                 
-                // addHistoryに itemID も渡して紐付ける
                 addHistory(winner.text, originalIndex + 1, winner.desc, null, winner.id);
 
                 if (removeAfter) winner.active = false;
                 
                 updateUI();
+
+                if (winner.isJackpot) {
+                    SoundManager.playFanfare();
+                    Confetti.start();
+                } else {
+                    SoundManager.playBell();
+                }
                 
                 resolve();
             }
@@ -1340,24 +1452,14 @@ function spinOnce(activeList, removeAfter) {
     });
 }
 
-// 履歴追加関数の拡張：itemIdを受け取りデータ属性にセット
 function addHistory(text, index, desc = '', timestamp = null, itemId = null) {
     const ul = document.getElementById('historyList');
     const li = document.createElement('li');
-    
-    // タイムスタンプが引数に無ければ現在時刻
     const timeStr = timestamp || new Date().toLocaleTimeString();
-    
-    // データ属性として保存 (CSV出力用 & DOMリンク用)
     li.dataset.number = index;
     li.dataset.timestamp = timeStr;
-    if (itemId !== null) {
-        li.dataset.itemId = itemId;
-    }
-    
-    // 表示用テキスト
+    if (itemId !== null) li.dataset.itemId = itemId;
     li.textContent = `${text}（番号: ${index}） (${timeStr})`;
-    
     if (desc) li.setAttribute('data-tooltip', desc);
     ul.insertBefore(li, ul.firstChild);
 }
