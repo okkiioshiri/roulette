@@ -264,7 +264,9 @@
         background: var(--input-bg); 
         color: var(--text-color);
         border: 1px solid var(--input-border);
-        min-width: 150px; outline: none; transition: border-color 0.2s;
+        /* 2つ並べるために最小幅を調整 */
+        min-width: 110px; 
+        outline: none; transition: border-color 0.2s;
     }
     .input-group input[type="text"]:focus { border-color: var(--accent-color); }
 
@@ -460,8 +462,10 @@
         
         <!-- 操作パネル -->
         <div class="controls">
+            <!-- 変更点: 入力グループに詳細テキスト用Inputを追加 -->
             <div class="input-group">
-                <input type="text" id="itemInput" placeholder="抽選項目を入力">
+                <input type="text" id="itemInput" placeholder="項目名">
+                <input type="text" id="itemDescInput" placeholder="詳細(任意)">
                 <button id="btnAdd" class="primary-btn" onclick="addItem()">追加</button>
             </div>
             
@@ -528,7 +532,10 @@ const TEXT_CONFIG = {
         clear: "CLEAR",
         reset: "RESET"
     },
-    inputs: { itemPlaceholder: "抽選項目を入力" },
+    inputs: { 
+        itemPlaceholder: "項目名", 
+        descPlaceholder: "詳細テキスト(任意)" // 追加
+    },
     labels: { spinCount: "連続回数:" },
     tooltips: {
         dropZone: "TXT:リストの一括追加 / CSV:状態を復元",
@@ -589,42 +596,31 @@ const SoundManager = {
             this.playClick();
         }
     },
-    // 回転中の「カカカ」音（音量を0.05→0.025へ半減）
     playClick() {
         if (this.isMuted || !this.ctx) return;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
         osc.type = 'square';
         osc.frequency.setValueAtTime(880, t);
-        
-        // 音量調整: 0.025 に設定
         gain.gain.setValueAtTime(0.025, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-        
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
         osc.start(t);
         osc.stop(t + 0.05);
     },
-    // 停止時の「チ～ン」音
     playBell() {
         if (this.isMuted || !this.ctx) return;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
         osc.type = 'sine'; 
         osc.frequency.setValueAtTime(2000, t); 
-        
         gain.gain.setValueAtTime(0.1, t);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5); 
-        
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
         osc.start(t);
         osc.stop(t + 1.5);
     }
@@ -663,6 +659,7 @@ function applyUIStrings() {
     if(titleInput.value === "ルーレット" || titleInput.value === "") titleInput.value = TEXT_CONFIG.titles.defaultInputTitle;
     titleInput.placeholder = TEXT_CONFIG.titles.titlePlaceholder;
     document.getElementById('itemInput').placeholder = TEXT_CONFIG.inputs.itemPlaceholder;
+    document.getElementById('itemDescInput').placeholder = TEXT_CONFIG.inputs.descPlaceholder; // 追加
     document.getElementById('btnAdd').textContent = TEXT_CONFIG.buttons.add;
     document.getElementById('btnFileSelect').textContent = TEXT_CONFIG.buttons.fileSelect;
     document.getElementById('txtSpinCount').textContent = TEXT_CONFIG.labels.spinCount;
@@ -686,7 +683,10 @@ document.getElementById('darkModeBtn').addEventListener('click', () => {
     document.body.classList.toggle('dark');
     renderRoulette();
 });
+
+// イベントリスナーの追加（詳細テキスト入力でもEnterで追加可能に）
 document.getElementById('itemInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
+document.getElementById('itemDescInput').addEventListener('keydown', e => { if (e.key === 'Enter') addItem(); });
 
 function initTooltip() {
     const existing = document.getElementById('global-tooltip');
@@ -753,11 +753,24 @@ function toggleFastMode() {
     renderRoulette();
 }
 
+// 変更点: addItem関数で詳細テキストも取得するように修正
 function addItem(text = null) {
-    const val = text || document.getElementById('itemInput').value.trim();
+    const inputName = document.getElementById('itemInput');
+    const inputDesc = document.getElementById('itemDescInput');
+    
+    const val = text || inputName.value.trim();
+    // プログラムから呼ばれた場合(textがある場合)はdescは空、手入力の場合はinputDescから取得
+    const desc = text ? '' : inputDesc.value.trim();
+
     if (!val) return;
-    items.push({ id: idCounter++, text: val, active: true, desc: '' });
-    if (!text) document.getElementById('itemInput').value = '';
+    
+    items.push({ id: idCounter++, text: val, active: true, desc: desc });
+    
+    if (!text) {
+        inputName.value = '';
+        inputDesc.value = '';
+        inputName.focus();
+    }
     updateUI();
 }
 
@@ -767,10 +780,12 @@ function loadAndProcessFile(file) {
     const reader = new FileReader();
     reader.onload = ev => {
         const content = ev.target.result;
-        if (content.startsWith('Type,Text,Active') || content.includes('Type,Text,Active')) {
+        // Check for header including 'Type'
+        if (content.startsWith('Type,') || content.includes('Type,')) {
             restoreFromCSV(content);
         } else {
             content.split(/\r?\n/).filter(line => line.trim()).forEach(line => {
+                // テキストファイル読み込み時は詳細テキストは空で追加
                 items.push({ id: idCounter++, text: line, active: true, desc: '' });
             });
             updateUI();
@@ -794,32 +809,41 @@ dropZone.addEventListener('drop', e => {
 
 function exportCSV() {
     const csvContent = [];
-    csvContent.push('Type,Text,Active,Description');
+    // Header format: Type, Text, Value1(Active/Number), Value2(Timestamp/Empty), Description
+    csvContent.push('Type,Text,Value1,Value2,Description');
     const title = document.getElementById('titleInput').value.replace(/"/g, '""');
-    csvContent.push(`Title,"${title}",,`);
+    csvContent.push(`Title,"${title}",,,`);
+    
     if (items.length === 0) {
         if (!confirm(TEXT_CONFIG.messages.emptySample)) return;
         TEXT_CONFIG.sampleData.forEach(d => {
-            csvContent.push(`Item,"${d.text}",1,"${d.desc}"`);
+            csvContent.push(`Item,"${d.text}",1,,"${d.desc}"`);
         });
     } else {
+        // Items: Value1=Active(1/0), Value2=Empty
         items.forEach(i => {
             const text = `"${i.text.replace(/"/g, '""')}"`;
             const desc = i.desc ? `"${i.desc.replace(/"/g, '""')}"` : '""';
-            csvContent.push(`Item,${text},${i.active ? 1 : 0},${desc}`);
+            csvContent.push(`Item,${text},${i.active ? 1 : 0},,${desc}`);
         });
+        
+        // History: Value1=Number, Value2=Timestamp
         const historyLis = document.querySelectorAll('#historyList li');
         historyLis.forEach(li => {
-            const text = `"${li.textContent.replace(/"/g, '""')}"`;
+            const textRaw = li.textContent.split('（番号:')[0] || li.textContent;
+            const text = `"${textRaw.trim().replace(/"/g, '""')}"`;
+            const num = li.dataset.number || "";
+            const time = li.dataset.timestamp ? `"${li.dataset.timestamp}"` : '""';
             const rawDesc = li.getAttribute('data-tooltip') || '';
             const desc = `"${rawDesc.replace(/"/g, '""')}"`;
-            csvContent.push(`History,${text},,${desc}`);
+            csvContent.push(`History,${text},${num},${time},${desc}`);
         });
+
         if (lastWinnerId !== null) {
             const winnerItem = items.find(i => i.id === lastWinnerId);
             if (winnerItem) {
                 const text = `"${winnerItem.text.replace(/"/g, '""')}"`;
-                csvContent.push(`Winner,${text},,""`);
+                csvContent.push(`Winner,${text},,,`);
             }
         }
     }
@@ -902,34 +926,44 @@ function restoreFromCSV(csvText) {
     document.getElementById('historyList').innerHTML = '';
     document.getElementById('selectedItem').innerHTML = '';
     const lines = csvText.split(/\r?\n/);
+    
     lines.forEach(line => {
         if (!line.trim() || line.startsWith('Type,')) return; 
         const cols = parseCSVLine(line);
         if (cols.length < 2) return;
+        
         const type = cols[0];
         const text = cols[1];
-        const val = cols[2];
-        const desc = cols[3] || '';
+        
         if (type === 'Item') {
-            const isActive = parseInt(val) === 1;
+            const isActive = parseInt(cols[2]) === 1;
+            const desc = cols[4] !== undefined ? cols[4] : (cols[3] || '');
             items.push({ id: idCounter++, text: text, active: isActive, desc: desc });
+
         } else if (type === 'History') {
-            const ul = document.getElementById('historyList');
-            const li = document.createElement('li');
-            li.textContent = text;
-            if (desc) li.setAttribute('data-tooltip', desc);
-            ul.appendChild(li);
+            const num = cols[2];
+            const time = cols[3];
+            const desc = cols[4] !== undefined ? cols[4] : (cols[3] || '');
+            
+            // 復元時に、現在の items 配列から同名の項目を探してIDをリンクする
+            // これにより、復元後の並び替えに履歴の番号が追従できるようになる
+            let linkedItemId = null;
+            const matchingItem = items.find(i => i.text === text);
+            if (matchingItem) {
+                linkedItemId = matchingItem.id;
+            }
+            
+            addHistory(text, num, desc, time, linkedItemId);
+
         } else if (type === 'Winner') {
             setTimeout(() => {
                 const winnerItem = items.find(i => i.text === text);
                 if (winnerItem) {
                     lastWinnerId = winnerItem.id;
-                    const itemNumber = items.indexOf(winnerItem) + 1;
-                    const descHtml = winnerItem.desc ? `<div class="winner-desc">${winnerItem.desc}</div>` : '';
-                    document.getElementById('selectedItem').innerHTML = `<div>${winnerItem.text}（番号: ${itemNumber}）</div>${descHtml}`;
-                    updateUI();
+                    updateUI(); 
                 }
             }, 0);
+
         } else if (type === 'Title') {
             document.getElementById('titleInput').value = text;
         }
@@ -940,6 +974,45 @@ function restoreFromCSV(csvText) {
 function updateUI() {
     renderList();
     renderRoulette();
+
+    // 1. 画面中央の当選結果番号の更新
+    if (lastWinnerId !== null) {
+        const winnerItem = items.find(i => i.id === lastWinnerId);
+        if (winnerItem) {
+            const currentNumber = items.indexOf(winnerItem) + 1;
+            const descHtml = winnerItem.desc ? `<div class="winner-desc">${winnerItem.desc}</div>` : '';
+            document.getElementById('selectedItem').innerHTML = `<div>${winnerItem.text}（番号: ${currentNumber}）</div>${descHtml}`;
+        } else {
+            document.getElementById('selectedItem').innerHTML = '';
+            lastWinnerId = null;
+        }
+    }
+
+    // 2. 履歴リスト内番号の更新
+    updateHistoryNumbers();
+}
+
+// 履歴リスト内の番号を、現在の items 順序に合わせて書き換える関数
+function updateHistoryNumbers() {
+    const listItems = document.querySelectorAll('#historyList li');
+    listItems.forEach(li => {
+        const itemId = li.dataset.itemId;
+        if (itemId !== undefined && itemId !== null) {
+            // 現在のリスト内でのインデックスを探す
+            // dataset.itemId は文字列なので型変換に注意 (items[].id は数値)
+            const currentIdx = items.findIndex(i => i.id == itemId);
+            
+            if (currentIdx !== -1) {
+                const newNum = currentIdx + 1;
+                // 現在のテキストから項目名部分を抽出（"〇〇（番号: x）..." の前まで）
+                const textPart = li.textContent.split('（番号:')[0];
+                const time = li.dataset.timestamp || '';
+                
+                li.textContent = `${textPart}（番号: ${newNum}） (${time})`;
+                li.dataset.number = newNum; // CSV保存用データ属性も更新
+            }
+        }
+    });
 }
 
 function clearAllData() {
@@ -987,7 +1060,7 @@ function handleDrop(e) {
         const movedItem = items[srcIndex];
         items.splice(srcIndex, 1);
         items.splice(destIndex, 0, movedItem);
-        updateUI();
+        updateUI(); // 並び替え後にUI更新（履歴番号更新を含む）
     }
     return false;
 }
@@ -1112,7 +1185,6 @@ function renderRoulette() {
 async function startRoulette(removeAfter) {
     if (isSpinning) return;
     
-    // サウンドの初期化(ユーザーアクション起因)
     SoundManager.init();
 
     let count = parseInt(document.getElementById('spinCountInput').value);
@@ -1155,19 +1227,15 @@ async function startRoulette(removeAfter) {
             const duration = 2000;
             const startTime = performance.now();
             const startAngle = angle;
-            // 反時計回りに回転させるためマイナス方向に加算（減算）
             const targetAngle = angle - 360 * 10 - Math.random() * 360; 
             
-            // 高速モード時のサウンド間隔制御
             let lastSoundTime = 0;
-
             function animate(time) {
                 const t = Math.min((time - startTime) / duration, 1);
                 const progress = 1 - Math.pow(1 - t, 3);
                 angle = startAngle + (targetAngle - startAngle) * progress;
                 document.getElementById('roulette').style.transform = `rotate(${angle}deg)`;
                 
-                // 高速回転中の音（少し間引く）
                 if (time - lastSoundTime > 80 && t < 0.95) {
                     SoundManager.playClick();
                     lastSoundTime = time;
@@ -1179,11 +1247,10 @@ async function startRoulette(removeAfter) {
             requestAnimationFrame(animate);
         });
         
-        // 終了時サウンド
         SoundManager.playBell();
 
         results.forEach(res => {
-            addHistory(res.text, res.originalIndex, res.desc);
+            addHistory(res.text, res.originalIndex, res.desc, null, res.id);
         });
         
         lastWinnerId = null;
@@ -1210,23 +1277,17 @@ function spinOnce(activeList, removeAfter) {
         const winner = activeList[randomIndex];
         const segmentAngle = 360 / activeList.length;
         
-        // --- 反時計回りロジックへの修正 ---
         const winnerCenterAngle = (segmentAngle * randomIndex) + (segmentAngle / 2);
         
-        // 現在の角度から「マイナス方向」に回転して目的の位置（0度）に合わせる計算
-        // 現在の360度剰余に対して、ターゲットとなる位置（-winnerCenterAngle）までの距離を求める
-        // 常にマイナス方向（反時計回り）に進むよう調整
         const baseRotations = 360 * 5; 
         let distToTarget = (-winnerCenterAngle - (angle % 360)) % 360;
         if (distToTarget > 0) distToTarget -= 360;
         
-        // 最終角度は現在の角度からさらにマイナス方向へ進める
         const finalAngle = angle - baseRotations + distToTarget;
         
         const duration = 2500;
         const startTime = performance.now();
 
-        // 効果音トリガー用変数
         let lastSegmentIndex = -1;
 
         function animate(time) {
@@ -1235,8 +1296,6 @@ function spinOnce(activeList, removeAfter) {
             const currentAnimAngle = angle + (finalAngle - angle) * progress;
             document.getElementById('roulette').style.transform = `rotate(${currentAnimAngle}deg)`;
             
-            // --- サウンド判定ロジック ---
-            // マイナス角度でも正常に動作するよう正規化
             const normalizedAngle = currentAnimAngle % 360;
             const effectiveAngle = (360 - normalizedAngle) % 360; 
             const currentSegment = Math.floor(effectiveAngle / segmentAngle) % activeList.length;
@@ -1245,9 +1304,7 @@ function spinOnce(activeList, removeAfter) {
                 SoundManager.playClick();
                 lastSegmentIndex = currentSegment;
             }
-            // ---------------------------
 
-            // 回転中のリストハイライト同期
             const currentItem = activeList[currentSegment];
             if (currentItem) {
                 document.querySelectorAll('#list li').forEach((li, idx) => {
@@ -1262,18 +1319,18 @@ function spinOnce(activeList, removeAfter) {
                 requestAnimationFrame(animate);
             } else {
                 angle = finalAngle;
-                // 終了時サウンド
                 SoundManager.playBell();
 
                 const originalIndex = items.findIndex(i => i.id === winner.id);
-                const descHtml = winner.desc ? `<div class="winner-desc">${winner.desc}</div>` : '';
-                document.getElementById('selectedItem').innerHTML = `<div>${winner.text}（番号: ${originalIndex + 1}）</div>${descHtml}`;
-                
-                addHistory(winner.text, originalIndex + 1, winner.desc);
+                // 選択直後のIDを保存
                 lastWinnerId = winner.id;
                 currentSessionWinners.push(winner.id);
                 
+                // addHistoryに itemID も渡して紐付ける
+                addHistory(winner.text, originalIndex + 1, winner.desc, null, winner.id);
+
                 if (removeAfter) winner.active = false;
+                
                 updateUI();
                 
                 resolve();
@@ -1283,10 +1340,24 @@ function spinOnce(activeList, removeAfter) {
     });
 }
 
-function addHistory(text, index, desc = '') {
+// 履歴追加関数の拡張：itemIdを受け取りデータ属性にセット
+function addHistory(text, index, desc = '', timestamp = null, itemId = null) {
     const ul = document.getElementById('historyList');
     const li = document.createElement('li');
-    li.textContent = `${text}（番号: ${index}） (${new Date().toLocaleTimeString()})`;
+    
+    // タイムスタンプが引数に無ければ現在時刻
+    const timeStr = timestamp || new Date().toLocaleTimeString();
+    
+    // データ属性として保存 (CSV出力用 & DOMリンク用)
+    li.dataset.number = index;
+    li.dataset.timestamp = timeStr;
+    if (itemId !== null) {
+        li.dataset.itemId = itemId;
+    }
+    
+    // 表示用テキスト
+    li.textContent = `${text}（番号: ${index}） (${timeStr})`;
+    
     if (desc) li.setAttribute('data-tooltip', desc);
     ul.insertBefore(li, ul.firstChild);
 }
