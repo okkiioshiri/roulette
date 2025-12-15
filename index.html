@@ -1155,7 +1155,8 @@ async function startRoulette(removeAfter) {
             const duration = 2000;
             const startTime = performance.now();
             const startAngle = angle;
-            const targetAngle = angle + 360 * 10 + Math.random() * 360; 
+            // 反時計回りに回転させるためマイナス方向に加算（減算）
+            const targetAngle = angle - 360 * 10 - Math.random() * 360; 
             
             // 高速モード時のサウンド間隔制御
             let lastSoundTime = 0;
@@ -1208,12 +1209,20 @@ function spinOnce(activeList, removeAfter) {
         const randomIndex = Math.floor(Math.random() * activeList.length);
         const winner = activeList[randomIndex];
         const segmentAngle = 360 / activeList.length;
+        
+        // --- 反時計回りロジックへの修正 ---
         const winnerCenterAngle = (segmentAngle * randomIndex) + (segmentAngle / 2);
-        const targetRotation = 360 - winnerCenterAngle;
+        
+        // 現在の角度から「マイナス方向」に回転して目的の位置（0度）に合わせる計算
+        // 現在の360度剰余に対して、ターゲットとなる位置（-winnerCenterAngle）までの距離を求める
+        // 常にマイナス方向（反時計回り）に進むよう調整
         const baseRotations = 360 * 5; 
-        const currentMod = angle % 360;
-        const distToTarget = (targetRotation - currentMod + 360) % 360;
-        const finalAngle = angle + baseRotations + distToTarget;
+        let distToTarget = (-winnerCenterAngle - (angle % 360)) % 360;
+        if (distToTarget > 0) distToTarget -= 360;
+        
+        // 最終角度は現在の角度からさらにマイナス方向へ進める
+        const finalAngle = angle - baseRotations + distToTarget;
+        
         const duration = 2500;
         const startTime = performance.now();
 
@@ -1227,6 +1236,7 @@ function spinOnce(activeList, removeAfter) {
             document.getElementById('roulette').style.transform = `rotate(${currentAnimAngle}deg)`;
             
             // --- サウンド判定ロジック ---
+            // マイナス角度でも正常に動作するよう正規化
             const normalizedAngle = currentAnimAngle % 360;
             const effectiveAngle = (360 - normalizedAngle) % 360; 
             const currentSegment = Math.floor(effectiveAngle / segmentAngle) % activeList.length;
