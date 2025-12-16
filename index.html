@@ -113,7 +113,7 @@
        3. サイドバー: リスト & 履歴 (Sidebar)
        ========================================================================== */
     #itemList, #history {
-        width: 380px; /* 340px -> 380px に拡張 */
+        width: 380px;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: 12px;
@@ -698,8 +698,11 @@ const TEXT_CONFIG = {
         shareError: "URLが長すぎるなどの理由でコピーできませんでした。"
     },
     sampleData: [
-        { text: "りんご", desc: "赤い果物。医者いらず。", jackpot: false, weight: 1 },
-        { text: "★大当たり", desc: "おめでとう！", jackpot: true, weight: 1 }
+        { text: "りんご", desc: "", jackpot: false, weight: 1 },
+        { text: "バナナ", desc: "黄色くて甘い、ゴリラの大好物！", jackpot: false, weight: 1 },
+        { text: "きゅうり", desc: "栄養が少ない。", jackpot: false, weight: 1 },
+        { text: "ラーメン", desc: "みんな大好き！食べ過ぎには注意。", jackpot: false, weight: 1 },
+        { text: "フォアグラ", desc: "珍味", jackpot: true, weight: 1 }
     ]
 };
 
